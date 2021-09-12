@@ -41,7 +41,7 @@ ThreadTest()
 
 
 // This function recieves input from the user.
-// It calls validateInput to validate the input size.
+// It calls validateInputSize to validate the input size.
 // If the input size is fine, it calls inputIdentification
 // which returns the input type.
 void getInput(int thread) {
