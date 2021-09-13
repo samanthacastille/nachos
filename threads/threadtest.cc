@@ -10,6 +10,7 @@
 
 using namespace std;
 
+
 void SimpleThread(int);
 
 // Functions for Tasks 1 and 2
@@ -18,7 +19,7 @@ char* validateInputSize(char*, int);
 char* task1GetInput(int);
 void task1(int);
 void task2();
-//void shouter(int);
+void shouter(int);
 int task2GetInput(int);
 
 
@@ -54,7 +55,7 @@ ThreadTest()
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 1
-// IT INCLUDES FUNCTIONS <getInput>,
+// IT INCLUDES FUNCTIONS <task1>, <task1GetInput>,
 // <validateInputSize>, and <inputIdentification>.
 //----------------------------------------------------------------------
 
@@ -203,42 +204,37 @@ char* inputIdentification(char* input, int size) {
 //----------------------------------------------------------------------
 
 
-int shout_count; // Global shout count variable
+int shout_count;
 
 
 // Get input from user and calls task2GetInput.
 // Create threads and call the shouter function.
 void task2(){
-  int thread_count; // Local thread count variable
-  int shout_count; // Local shout count variable
+  int threadCount;
+  int shoutCount;
   char* threadInputType;
   char* shoutInputType;
   int size = 6;
 
-  printf("Enter number of threads (1-1000): ");// Collect user input code
-  thread_count = task2GetInput(size);
-  if (thread_count!=-1) {
-  } else {
+  printf("Enter number of threads (1-1000): ");
+  threadCount = task2GetInput(size);
+  if (threadCount==-1) {
     printf("\nYour input was either not a positive integer, or it was too large. Try again.\n\n");
     currentThread->Finish();
   }
 
   printf("\nEnter number of shouts (1-1000): ");
-  shout_count = task2GetInput(size);
-  if (shout_count!=-1) {
-  } else {
+  shoutCount = task2GetInput(size);
+  if (shoutCount==-1) {
     printf("\nYour input was either not a positive integer, or it was too large. Try again.\n\n");
     currentThread->Finish();
   }
 
-
-/*
-  shout_count = some_value;
-  for(int i=0;i<thread_count;i++){
+  shout_count = shoutCount;
+  for(int i=0;i<threadCount;i++){
     Thread *t = new Thread("Shouting Thread");
-    t->Fork(shouter, which+1+i);
+    t->Fork(shouter, i+1);
   }
-  */
 }
 
 
@@ -246,9 +242,8 @@ void task2(){
 // Returns either: the integer value correctly input from the user OR -1
 // if the value entered is not valid.
 int task2GetInput(int size) {
-  char* input;
+  char* input = new char[size];
   char* inputType;
-  input = new char[size];
   int integerInput;
 
   fgets(input, size, stdin);
@@ -272,27 +267,61 @@ int task2GetInput(int size) {
   }
 }
 
-/*
+
+
 // Will decide which phrase to shout at random and keep track of # of shouts.
 void shouter(int which){
-  int upper = 7;
-  int lower = 3;
-  int wait_goal = (Random()%((upper)-lower))+lower;
-  int waits_done = 0;
-  int shouts_done = 0;
-  int rand_shout =
+  int upperBusyLoops = 7;
+  int lowerBusyLoops = 3;
+  int waitGoal = (Random()%((upperBusyLoops)-lowerBusyLoops))+lowerBusyLoops;
+  int waitsDone = 0;
+  int shoutsDone = 0;
+  int upperShoutStrings = 7;
+  int lowerShoutStrings = 1;
+  int randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
 
-  // Plenty of other loop structures will work fine.
+  while(shoutsDone<shout_count) {
 
-  while(busyCondition){
-    while(busyCondition){
-      waits_done++;
+    while((waitsDone>=0) && (waitsDone<waitGoal)){
+      waitsDone++;
       currentThread->Yield();
     }
-    printf("%s\n",rand_shout);
-    shouts_done++;
-    waits_done = 0;
+
+    switch (randomShout) {
+      case(1): {
+        printf("Shouter %d: %s\n", which, shout1);
+        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        break;
+      }
+      case(2): {
+        printf("Shouter %d: %s\n", which, shout2);
+        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        break;
+      }
+      case(3): {
+        printf("Shouter %d: %s\n", which, shout3);
+        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        break;
+      }
+      case(4): {
+        printf("Shouter %d: %s\n", which, shout4);
+        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        break;
+      }
+      case(5): {
+        printf("Shouter %d: %s\n", which, shout5);
+        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        break;
+      }
+      case(6): {
+        printf("Shouter %d: %s\n", which, shout6);
+        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        break;
+      }
+    }
+    shoutsDone++;
+    waitsDone = 0;
+    waitGoal = (Random()%((upperBusyLoops)-lowerBusyLoops))+lowerBusyLoops;
   }
 }
-*/
 
