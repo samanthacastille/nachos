@@ -14,14 +14,16 @@ using namespace std;
 void SimpleThread(int);
 
 // Functions for Tasks 1 and 2
-char* inputIdentification(char*, int);
-char* validateInputSize(char*, int);
-char* task1GetInput(int);
 void task1(int);
+char* task1GetInput(int);
+char* validateInputSize(char*, int);
+char* inputIdentification(char*, int);
 void task2();
-void shouter(int);
 int task2GetInput(int);
+void shouter(int);
 
+// global flag to execute a particular task
+int taskFlag;
 
 // Constant shouting strings
 const char* shout1 = "I should not have said that.";
@@ -35,7 +37,9 @@ const char* shout6 = "I suspect Nargles are behind it.";
 
 //----------------------------------------------------------------------
 // ThreadTest
-// 	Invoke a test routine.
+// Depending on the value of the taskFlag, which is taken in
+// in the terminal command when running nachOS, it will either execute
+// task 1, task 2, or print an error if the task is not specified.
 //----------------------------------------------------------------------
 
 void
@@ -43,11 +47,14 @@ ThreadTest()
 {
     DEBUG('t', "Entering ThreadTest");
 
-
-    //Thread *t = new Thread("forked thread");
-    //t->Fork(task1, 0);
-
-    task2();
+    if (taskFlag==1){
+      Thread *t = new Thread("forked thread");
+      t->Fork(task1, 0);
+    } else if (taskFlag==2) {
+      task2();
+    } else {
+      printf("You didn't use the -A command to choose which task to execute. \nExiting ->->->->->->\n");
+    }
 
 	  currentThread->Finish();
 }
@@ -216,6 +223,9 @@ void task2(){
   char* shoutInputType;
   int size = 6;
 
+  char* threadInput;
+  char* shoutInput;
+
   printf("Enter number of threads (1-1000): ");
   threadCount = task2GetInput(size);
   if (threadCount==-1) {
@@ -223,12 +233,14 @@ void task2(){
     currentThread->Finish();
   }
 
+
   printf("\nEnter number of shouts (1-1000): ");
   shoutCount = task2GetInput(size);
   if (shoutCount==-1) {
     printf("\nYour input was either not a positive integer, or it was too large. Try again.\n\n");
     currentThread->Finish();
   }
+
 
   shout_count = shoutCount;
   for(int i=0;i<threadCount;i++){
@@ -266,7 +278,6 @@ int task2GetInput(int size) {
     return -1;
   }
 }
-
 
 
 // Will decide which phrase to shout at random and keep track of # of shouts.
