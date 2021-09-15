@@ -1,8 +1,8 @@
-// system.cc 
+// system.cc
 //	Nachos initialization and cleanup routines.
 //
 // Copyright (c) 1992-1993,2021 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation 
+// All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
@@ -50,8 +50,8 @@ extern void Cleanup();
 //	Note that instead of calling Yield() directly (which would
 //	suspend the interrupt handler, not the interrupted thread
 //	which is what we wanted to context switch), we set a flag
-//	so that once the interrupt handler is done, it will appear as 
-//	if the interrupted thread called Yield at the point it is 
+//	so that once the interrupt handler is done, it will appear as
+//	if the interrupted thread called Yield at the point it is
 //	was interrupted.
 //
 //	"dummy" is because every interrupt handler takes one argument,
@@ -67,10 +67,10 @@ TimerInterruptHandler(int dummy)
 //----------------------------------------------------------------------
 // Initialize
 // 	Initialize Nachos global data structures.  Interpret command
-//	line arguments in order to determine flags for the initialization.  
-// 
+//	line arguments in order to determine flags for the initialization.
+//
 //	"argc" is the number of command line arguments (including the name
-//		of the command) -- ex: "nachos -d +" -> argc = 3 
+//		of the command) -- ex: "nachos -d +" -> argc = 3
 //	"argv" is an array of strings, one for each command line argument
 //		ex: "nachos -d +" -> argv = {"nachos", "-d", "+"}
 //----------------------------------------------------------------------
@@ -91,7 +91,7 @@ Initialize(int argc, char **argv)
     double rely = 1;		// network reliability
     int netname = 0;		// UNIX socket name
 #endif
-    
+
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
 	argCount = 1;
 	if (!strcmp(*argv, "-d")) {
@@ -108,6 +108,36 @@ Initialize(int argc, char **argv)
 	    randomYield = TRUE;
 	    argCount = 2;
 	}
+
+
+// Samantha Castille
+// Task 3 code
+#ifdef THREADS
+if (!strcmp(*argv, "-A")) {
+  if (*(argv+1) != '\0') {
+    if ((*(*(argv+1)+1))=='\0') {
+      taskFlag = atoi(*(argv+1));
+      if (taskFlag==1){
+        continue;
+      } else if (taskFlag==2) {
+        continue;
+      } else {
+        taskFlag = -1;
+      }
+    } else {
+      printf("You have to input a task number (1/2).\n");
+    }
+  argCount = 2;
+  } else {
+    printf("You have to input a task number (1/2).\n");
+    taskFlag = -1;
+    argCount = 1;
+  }
+}
+#endif
+// End task 3 code
+
+
 #ifdef USER_PROGRAM
 	if (!strcmp(*argv, "-s"))
 	    debugUserProg = TRUE;
@@ -140,13 +170,13 @@ Initialize(int argc, char **argv)
 
     // We didn't explicitly allocate the current thread we are running in.
     // But if it ever tries to give up the CPU, we better have a Thread
-    // object to save its state. 
-    currentThread = new Thread("main");		
+    // object to save its state.
+    currentThread = new Thread("main");
     currentThread->setStatus(RUNNING);
 
     interrupt->Enable();
     CallOnUserAbort(Cleanup);			// if user hits ctl-C
-    
+
 #ifdef USER_PROGRAM
     machine = new Machine(debugUserProg);	// this must come first
 #endif
@@ -175,7 +205,7 @@ Cleanup()
 #ifdef NETWORK
     delete postOffice;
 #endif
-    
+
 #ifdef USER_PROGRAM
     delete machine;
 #endif
@@ -187,11 +217,11 @@ Cleanup()
 #ifdef FILESYS
     delete synchDisk;
 #endif
-    
+
     delete timer;
     delete scheduler;
     delete interrupt;
-    
+
     Exit(0);
 }
 

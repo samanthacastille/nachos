@@ -4,24 +4,29 @@
 // All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
+
+// Samantha Castille -C00134220
+// All of the code in this file is my own work.
+
+
 #include "copyright.h"
 #include "system.h"
 #include <iostream>
-
 using namespace std;
 
-
-void SimpleThread(int);
-
 // Functions for Tasks 1 and 2
-char* inputIdentification(char*, int);
-char* validateInputSize(char*, int);
-char* task1GetInput(int);
 void task1(int);
+char* task1GetInput();
+int validateInputSize(char*, int);
+char* inputIdentification(char*, int);
 void task2();
+int task2GetInput();
+void forkThreads();
+int randomNumber(int, int);
 void shouter(int);
-int task2GetInput(int);
 
+// global flag to execute a particular task
+int taskFlag;
 
 // Constant shouting strings
 const char* shout1 = "I should not have said that.";
@@ -33,44 +38,53 @@ const char* shout6 = "I suspect Nargles are behind it.";
 
 
 
-//----------------------------------------------------------------------
-// ThreadTest
-// 	Invoke a test routine.
-//----------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// ThreadTest (main function)
+// Depending on the value of the taskFlag, thread is taken in
+// in the terminal command when running nachOS, it will either execute
+// task 1, task 2, or print an error if the task is not specified properly.
+//------------------------------------------------------------------------------
 
 void
 ThreadTest()
 {
     DEBUG('t', "Entering ThreadTest");
 
-
-    //Thread *t = new Thread("forked thread");
-    //t->Fork(task1, 0);
-
-    task2();
+    if (taskFlag==1){
+      Thread *t = new Thread("forked thread");
+      t->Fork(task1, 0);
+    } else if (taskFlag==2) {
+      task2();
+    } else {
+      printf("You didn't use the -A command to choose thread task to execute.\nExiting ->->->->->->\n\n");
+    }
 
 	  currentThread->Finish();
 }
 
 
+
+
+
 //----------------------------------------------------------------------
-// THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 1
+// THIS IS THE START OF CODE FOR TASK 1
 // IT INCLUDES FUNCTIONS <task1>, <task1GetInput>,
 // <validateInputSize>, and <inputIdentification>.
 //----------------------------------------------------------------------
 
 
+const int maxInputSizeTask1 = 256;
+
 // This function invokes task 1 with a thread created from the ThreadTest function.
 void task1(int thread) {
-  char* inputType;
   printf("Please give me an input.\n");
 
-  inputType = task1GetInput(100);
-  if (inputType=="Your input was too long. It was discarded.\nPlease rerun and keep your input under:") {
-    printf("%s 99.", inputType);
+  char* result = task1GetInput();
+  if (result=="Your input was too long. It was discarded.\nPlease rerun and keep your input under: ") {
+    printf("%s %d.\n\n", result, (maxInputSizeTask1 - 1));
   }
   else {
-    printf("\nYour input was of type: %s\n\n", inputType);
+    printf("\nYour input was of type: %s\n\n", result);
   }
 }
 
@@ -78,21 +92,21 @@ void task1(int thread) {
 // This function recieves input from the user.
 // It calls validateInputSize to validate the input size.
 // If the input size is fine, it calls inputIdentification
-// which returns the input type.
-char* task1GetInput(int size) {
+// thread returns the input type.
+char* task1GetInput() {
 	char* input;
+  char* tooLongInputMessage = "Your input was too long. It was discarded.\nPlease rerun and keep your input under: ";
   char* inputType;
-  input = new char[size];
+  input = new char[maxInputSizeTask1];
 
-  fgets(input, size, stdin);
+  fgets(input, maxInputSizeTask1, stdin);
 
-  char* validateResult = validateInputSize(input, size);
-  if (validateResult=="OK") {
-    inputType = inputIdentification(input, size);
+  int validateResult = validateInputSize(input, maxInputSizeTask1);
+  if (validateResult==1) {
+    inputType = inputIdentification(input, maxInputSizeTask1);
   }
-  else {
-    printf("\n%s\n", validateResult);
-    return validateResult;
+  else if (validateResult==-1){
+    return tooLongInputMessage;
   }
   return inputType;
 }
@@ -101,10 +115,9 @@ char* task1GetInput(int size) {
 // This function validates the input size.
 // If the input is empty, it asks for it again.
 // If the input is too long, it discards it and tells the user to start over.
-char* validateInputSize(char* input, int size) {
+int validateInputSize(char* input, int size) {
   bool empty = false;
   bool tooLong;
-  char* tooLongInputMessage = "Your input was too long. It was discarded.\nPlease rerun and keep your input under:";
   if (input[0]=='\n'){
     empty = true;
   }
@@ -116,20 +129,19 @@ char* validateInputSize(char* input, int size) {
       empty = true;
     } else {
       empty = false;
-      return "OK";
+      return 1;;
     }
   }
   if ((input[size-1]==0) && ((input[size-2]=='\n') || (input[size-2]==0))) {
-    return "OK";
+    return 1;
   } else {
-    return tooLongInputMessage;
+    return -1;
   }
 }
 
 
 // This function receives a character array and identifies the input type.
 // It returns a character string stating that type.
-// This is a brute-force algorithm and I plan to clean it up in the future.
 char* inputIdentification(char* input, int size) {
   int numDecimals = 0;
 
@@ -140,7 +152,7 @@ char* inputIdentification(char* input, int size) {
     }
     return "character";
   }
-  // being looping through character array
+  // begin looping through character array
   for(int i=0;i<=size;i++){
     // if null terminator, return
     if (input[i]==0) {
@@ -200,11 +212,14 @@ char* inputIdentification(char* input, int size) {
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 2
-// IT INCLUDES FUNCTIONS <task2>, <task2GetInput>, and <shouter>.
+// IT INCLUDES FUNCTIONS <task2>, <task2GetInput>,
+// <forkThreads>, <randomNumber>, and <shouter>.
 //----------------------------------------------------------------------
 
 
-int shout_count;
+int globalShoutCount;
+int globalThreadCount;
+const int maxInputSizeTask2 = 6;
 
 
 // Get input from user and calls task2GetInput.
@@ -214,43 +229,44 @@ void task2(){
   int shoutCount;
   char* threadInputType;
   char* shoutInputType;
-  int size = 6;
+  char* threadInput;
+  char* shoutInput;
 
   printf("Enter number of threads (1-1000): ");
-  threadCount = task2GetInput(size);
+  threadCount = task2GetInput();
   if (threadCount==-1) {
     printf("\nYour input was either not a positive integer, or it was too large. Try again.\n\n");
     currentThread->Finish();
+  } else {
+    globalThreadCount = threadCount;
   }
 
   printf("\nEnter number of shouts (1-1000): ");
-  shoutCount = task2GetInput(size);
+  shoutCount = task2GetInput();
   if (shoutCount==-1) {
     printf("\nYour input was either not a positive integer, or it was too large. Try again.\n\n");
     currentThread->Finish();
+  } else {
+    globalShoutCount = shoutCount;
   }
 
-  shout_count = shoutCount;
-  for(int i=0;i<threadCount;i++){
-    Thread *t = new Thread("Shouting Thread");
-    t->Fork(shouter, i+1);
-  }
+  forkThreads();
 }
 
 
 // Gets user input and check if it's an integer and in the correct range.
 // Returns either: the integer value correctly input from the user OR -1
 // if the value entered is not valid.
-int task2GetInput(int size) {
-  char* input = new char[size];
+int task2GetInput() {
+  char* input = new char[maxInputSizeTask2];
   char* inputType;
   int integerInput;
 
-  fgets(input, size, stdin);
+  fgets(input, maxInputSizeTask2, stdin);
 
-  char* validateResult = validateInputSize(input, size);
-  if (validateResult=="OK") {
-    inputType = inputIdentification(input, size);
+  int validateResult = validateInputSize(input, maxInputSizeTask2);
+  if (validateResult==1) {
+    inputType = inputIdentification(input, maxInputSizeTask2);
     if (inputType=="integer") {
       integerInput = atoi(input);
       if ((integerInput>0) && (integerInput<1001)) {
@@ -268,60 +284,72 @@ int task2GetInput(int size) {
 }
 
 
+// Forks specified number of threads to do the shouting
+void forkThreads() {
+  for(int i=0;i<globalThreadCount;i++){
+    Thread *t = new Thread("Shouting Thread");
+    t->Fork(shouter, i+1);
+  }
+}
 
-// Will decide which phrase to shout at random and keep track of # of shouts.
-void shouter(int which){
-  int upperBusyLoops = 7;
-  int lowerBusyLoops = 3;
-  int waitGoal = (Random()%((upperBusyLoops)-lowerBusyLoops))+lowerBusyLoops;
+
+// Generates a random number in a specific range
+int randomNumber(int upperLimit, int lowerLimit) {
+  int random = (Random()%((upperLimit)-lowerLimit))+lowerLimit;
+}
+
+
+// Will decide thread phrase to shout at random and keep track of # of shouts.
+void shouter(int thread){
   int waitsDone = 0;
   int shoutsDone = 0;
+  int upperBusyLoops = 7;
+  int lowerBusyLoops = 3;
+  int waitGoal = randomNumber(upperBusyLoops, lowerBusyLoops);
   int upperShoutStrings = 7;
   int lowerShoutStrings = 1;
-  int randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+  int randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
 
-  while(shoutsDone<shout_count) {
-
+  while(shoutsDone<globalShoutCount) {
     while((waitsDone>=0) && (waitsDone<waitGoal)){
       waitsDone++;
       currentThread->Yield();
     }
-
     switch (randomShout) {
       case(1): {
-        printf("Shouter %d: %s\n", which, shout1);
-        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        printf("Shouter %d: %s\n", thread, shout1);
+        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(2): {
-        printf("Shouter %d: %s\n", which, shout2);
-        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        printf("Shouter %d: %s\n", thread, shout2);
+        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(3): {
-        printf("Shouter %d: %s\n", which, shout3);
-        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        printf("Shouter %d: %s\n", thread, shout3);
+        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(4): {
-        printf("Shouter %d: %s\n", which, shout4);
-        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        printf("Shouter %d: %s\n", thread, shout4);
+        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(5): {
-        printf("Shouter %d: %s\n", which, shout5);
-        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        printf("Shouter %d: %s\n", thread, shout5);
+        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(6): {
-        printf("Shouter %d: %s\n", which, shout6);
-        randomShout = (Random()%((upperShoutStrings)-lowerShoutStrings))+lowerShoutStrings;
+        printf("Shouter %d: %s\n", thread, shout6);
+        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
         break;
       }
     }
     shoutsDone++;
     waitsDone = 0;
-    waitGoal = (Random()%((upperBusyLoops)-lowerBusyLoops))+lowerBusyLoops;
+    waitGoal = randomNumber(upperBusyLoops, lowerBusyLoops);
   }
 }
 
