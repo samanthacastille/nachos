@@ -29,11 +29,14 @@ extern Interrupt *interrupt;			// interrupt status
 extern Statistics *stats;			// performance metrics
 extern Timer *timer;				// the hardware alarm clock
 
+
+// Samantha Castille
 // Task 3 code
 #ifdef THREADS
 extern int taskFlag;
 #endif
 // End task 3 code
+
 
 #ifdef USER_PROGRAM
 #include "machine.h"

@@ -109,23 +109,34 @@ Initialize(int argc, char **argv)
 	    argCount = 2;
 	}
 
-// Task 3 code - still needs work
+
+// Samantha Castille
+// Task 3 code
 #ifdef THREADS
 if (!strcmp(*argv, "-A")) {
-  if (argCount==1){
-    if (argc==1) {
-      taskFlag = 1;
-    } else if (argc==2) {
-      taskFlag = 2;
+  if (*(argv+1) != '\0') {
+    if ((*(*(argv+1)+1))=='\0') {
+      taskFlag = atoi(*(argv+1));
+      if (taskFlag==1){
+        continue;
+      } else if (taskFlag==2) {
+        continue;
+      } else {
+        taskFlag = -1;
+      }
     } else {
-      taskFlag = -1;
+      printf("You have to input a task number (1/2).\n");
     }
+  argCount = 2;
   } else {
+    printf("You have to input a task number (1/2).\n");
     taskFlag = -1;
+    argCount = 1;
   }
 }
 #endif
 // End task 3 code
+
 
 #ifdef USER_PROGRAM
 	if (!strcmp(*argv, "-s"))
