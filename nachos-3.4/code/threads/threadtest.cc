@@ -340,4 +340,3 @@ void shouter(int thread){
     waitGoal = randomNumber(upperBusyLoops, lowerBusyLoops);
   }
 }
-
