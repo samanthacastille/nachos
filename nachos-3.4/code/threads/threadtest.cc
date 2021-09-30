@@ -16,15 +16,29 @@
 using namespace std;
 
 // Functions for Project 1 -> Tasks 1 and 2
-void project1task1(int);
+// Task 1
+void identifyInput(int);
 char* task1GetInput();
 int validateInputSize(char*, int);
 char* inputIdentification(char*, int);
+// Task 2
 void project1task2();
 int task2GetInput();
 void forkThreads();
 int randomNumber(int, int);
 void shouter(int);
+
+// Functions for Project 2 -> Tasks 1-4
+void busyWaitingLoop(int);
+// Task 1
+void project2task1();
+// Task 2
+void project2task2();
+// Task 3
+void project2task3();
+// Task 4
+void project2task4();
+
 
 
 // global flag to execute a particular task
@@ -42,9 +56,9 @@ const char* shout6 = "I suspect Nargles are behind it.";
 
 //------------------------------------------------------------------------------
 // ThreadTest (main function)
-// Depending on the value of the taskFlag, thread is taken in
-// in the terminal command when running nachOS, it will either execute
-// project1task1, project1task2, or print an error if the task is not specified properly.
+// Depending on the value of the taskFlag, which is taken in
+// in the terminal command when running nachOS, it will execute one of
+// tasks 1-6 or print an error if the task is not specified properly.
 //------------------------------------------------------------------------------
 
 void
@@ -54,11 +68,21 @@ ThreadTest()
 
     if (taskFlag==1){
       Thread *t = new Thread("forked thread");
-      t->Fork(project1task1, 0);
+      t->Fork(identifyInput, 0);
     } else if (taskFlag==2) {
       project1task2();
+    } else if (taskFlag==3) {
+      project2task1();
+    } else if (taskFlag==4) {
+      project2task2();
+    } else if (taskFlag==5) {
+      project2task3();
+    } else if (taskFlag==6) {
+      project2task4();
     } else {
-      printf("You didn't use the -A command to choose a thread task to execute.\nPlease insert '-A' followed by which task you'd like to execute (1/2).\nExiting ->->->->->->\n\n");
+      printf("You didn't use the -A command, or you didn't use it correctly.\n");
+      printf("Please insert '-A' followed by which task you'd like to execute (1/2/3/4/5/6).\n");
+      printf("Exiting ->->->->->->->->->->->->->->->->->->->->->->->->->->->\n\n\n\n");
     }
 
 	  currentThread->Finish();
@@ -67,7 +91,7 @@ ThreadTest()
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF CODE FOR TASK 1
-// IT INCLUDES FUNCTIONS <project1task1>, <task1GetInput>,
+// IT INCLUDES FUNCTIONS <identifyInput>, <task1GetInput>,
 // <validateInputSize>, and <inputIdentification>.
 //----------------------------------------------------------------------
 
@@ -75,7 +99,7 @@ ThreadTest()
 const int maxInputSizeTask1 = 256;
 
 // This function invokes task 1 with a thread created from the ThreadTest function.
-void project1task1(int thread) {
+void identifyInput(int thread) {
   printf("Please give me an input.\n");
 
   char* result = task1GetInput();
@@ -339,4 +363,45 @@ void shouter(int thread){
     waitsDone = 0;
     waitGoal = randomNumber(upperBusyLoops, lowerBusyLoops);
   }
+}
+
+
+
+
+//----------------------------------------------------------------------
+// THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 3
+// IT INCLUDES FUNCTIONS <project2task1>
+//----------------------------------------------------------------------
+
+void project2task1() {
+  printf("You have selected task 3. Congrats.\n");
+}
+
+//----------------------------------------------------------------------
+// THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 4
+// IT INCLUDES FUNCTIONS <project2task2>
+//----------------------------------------------------------------------
+
+void project2task2() {
+  printf("You have selected task 4. Congrats.\n");
+}
+
+
+//----------------------------------------------------------------------
+// THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 5
+// IT INCLUDES FUNCTIONS <project2task3>
+//----------------------------------------------------------------------
+
+void project2task3() {
+  printf("You have selected task 5. Congrats.\n");
+}
+
+
+//----------------------------------------------------------------------
+// THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 6
+// IT INCLUDES FUNCTIONS <project2task4>
+//----------------------------------------------------------------------
+
+void project2task4() {
+  printf("You have selected task 6. Congrats.\n");
 }
