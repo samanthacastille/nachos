@@ -5,25 +5,27 @@
 // of liability and disclaimer of warranty provisions.
 
 
-// Samantha Castille -C00134220
+// Samantha Castille - C00134220
 // All of the code in this file is my own work.
 
 
 #include "copyright.h"
 #include "system.h"
+#include "synch.h"
 #include <iostream>
 using namespace std;
 
-// Functions for Tasks 1 and 2
-void task1(int);
+// Functions for Project 1 -> Tasks 1 and 2
+void project1task1(int);
 char* task1GetInput();
 int validateInputSize(char*, int);
 char* inputIdentification(char*, int);
-void task2();
+void project1task2();
 int task2GetInput();
 void forkThreads();
 int randomNumber(int, int);
 void shouter(int);
+
 
 // global flag to execute a particular task
 int taskFlag;
@@ -42,7 +44,7 @@ const char* shout6 = "I suspect Nargles are behind it.";
 // ThreadTest (main function)
 // Depending on the value of the taskFlag, thread is taken in
 // in the terminal command when running nachOS, it will either execute
-// task 1, task 2, or print an error if the task is not specified properly.
+// project1task1, project1task2, or print an error if the task is not specified properly.
 //------------------------------------------------------------------------------
 
 void
@@ -52,23 +54,20 @@ ThreadTest()
 
     if (taskFlag==1){
       Thread *t = new Thread("forked thread");
-      t->Fork(task1, 0);
+      t->Fork(project1task1, 0);
     } else if (taskFlag==2) {
-      task2();
+      project1task2();
     } else {
-      printf("You didn't use the -A command to choose thread task to execute.\nExiting ->->->->->->\n\n");
+      printf("You didn't use the -A command to choose a thread task to execute.\nPlease insert '-A' followed by which task you'd like to execute (1/2).\nExiting ->->->->->->\n\n");
     }
 
 	  currentThread->Finish();
 }
 
 
-
-
-
 //----------------------------------------------------------------------
 // THIS IS THE START OF CODE FOR TASK 1
-// IT INCLUDES FUNCTIONS <task1>, <task1GetInput>,
+// IT INCLUDES FUNCTIONS <project1task1>, <task1GetInput>,
 // <validateInputSize>, and <inputIdentification>.
 //----------------------------------------------------------------------
 
@@ -76,7 +75,7 @@ ThreadTest()
 const int maxInputSizeTask1 = 256;
 
 // This function invokes task 1 with a thread created from the ThreadTest function.
-void task1(int thread) {
+void project1task1(int thread) {
   printf("Please give me an input.\n");
 
   char* result = task1GetInput();
@@ -87,7 +86,6 @@ void task1(int thread) {
     printf("\nYour input was of type: %s\n\n", result);
   }
 }
-
 
 // This function recieves input from the user.
 // It calls validateInputSize to validate the input size.
@@ -110,7 +108,6 @@ char* task1GetInput() {
   }
   return inputType;
 }
-
 
 // This function validates the input size.
 // If the input is empty, it asks for it again.
@@ -139,7 +136,6 @@ int validateInputSize(char* input, int size) {
   }
 }
 
-
 // This function receives a character array and identifies the input type.
 // It returns a character string stating that type.
 char* inputIdentification(char* input, int size) {
@@ -155,11 +151,7 @@ char* inputIdentification(char* input, int size) {
   // begin looping through character array
   for(int i=0;i<=size;i++){
     // if null terminator, return
-    if (input[i]==0) {
-      return "How did I get here?";
-    }
-    // numbers cannot have more than one decimal
-    if (numDecimals>1) {
+    if ((input[i] >= 'a' && input[i] <= 'z') || (input[i] >= 'A' && input[i] <= 'Z') || input[i]==0 || numDecimals>1) {
       return "character string";
     }
     // keep track of # of decimals and check placement
@@ -177,7 +169,7 @@ char* inputIdentification(char* input, int size) {
       return "character string";
     }
     else if (input[0]=='-') {
-      if ((input[i]>='0') && (input[i]<='9')){
+      if ((input[i]>='0') && (input[i]<='9')) {
         if (input[i+1]=='\n') {
           if ((numDecimals==0)){
             return "negative integer";
@@ -212,7 +204,7 @@ char* inputIdentification(char* input, int size) {
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 2
-// IT INCLUDES FUNCTIONS <task2>, <task2GetInput>,
+// IT INCLUDES FUNCTIONS <project1task2>, <task2GetInput>,
 // <forkThreads>, <randomNumber>, and <shouter>.
 //----------------------------------------------------------------------
 
@@ -224,7 +216,7 @@ const int maxInputSizeTask2 = 6;
 
 // Get input from user and calls task2GetInput.
 // Create threads and call the shouter function.
-void task2(){
+void project1task2(){
   int threadCount;
   int shoutCount;
   char* threadInputType;
@@ -252,7 +244,6 @@ void task2(){
 
   forkThreads();
 }
-
 
 // Gets user input and check if it's an integer and in the correct range.
 // Returns either: the integer value correctly input from the user OR -1
@@ -283,7 +274,6 @@ int task2GetInput() {
   }
 }
 
-
 // Forks specified number of threads to do the shouting
 void forkThreads() {
   for(int i=0;i<globalThreadCount;i++){
@@ -292,12 +282,10 @@ void forkThreads() {
   }
 }
 
-
 // Generates a random number in a specific range
 int randomNumber(int upperLimit, int lowerLimit) {
   int random = (Random()%((upperLimit)-lowerLimit))+lowerLimit;
 }
-
 
 // Will decide thread phrase to shout at random and keep track of # of shouts.
 void shouter(int thread){
