@@ -117,9 +117,7 @@ if (!strcmp(*argv, "-A")) {
   if (*(argv+1) != '\0') {
     if ((*(*(argv+1)+1))=='\0') {
       taskFlag = atoi(*(argv+1));
-      if (taskFlag==1){
-        continue;
-      } else if (taskFlag==2) {
+      if ((taskFlag==1) || (taskFlag==2) || (taskFlag==3) || (taskFlag==4) || (taskFlag==5) || (taskFlag==6)) {
         continue;
       } else {
         taskFlag = -1;
@@ -224,4 +222,3 @@ Cleanup()
 
     Exit(0);
 }
-
