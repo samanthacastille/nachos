@@ -15,13 +15,20 @@
 #include <iostream>
 using namespace std;
 
+// global flag to execute a particular task
+int taskFlag;
+
+// Functions used in multiple tasks
+void invalidInput(char*);
+char* getInput(bool, int, int, char*, char*);
+
 // Functions for Project 1 -> Tasks 1 and 2
 // Task 1
 void identifyInput(int);
 int validateInputSize(char*, int);
 char* inputIdentification(char*, int);
 // Task 2
-void project1task2();
+void shoutingTask();
 void forkThreads();
 int randomNumber(int, int);
 void shouter(int);
@@ -37,14 +44,6 @@ void project2task3();
 // Task 4
 void project2task4();
 
-
-// Functions used in multiple tasks
-void invalidInput(char*);
-char* getInput(bool, int, int, char*, char*);
-
-
-// global flag to execute a particular task
-int taskFlag;
 
 // Constant shouting strings
 const char* shout1 = "I should not have said that.";
@@ -72,7 +71,7 @@ ThreadTest()
       Thread *t = new Thread("forked thread");
       t->Fork(identifyInput, 0);
     } else if (taskFlag==2) {
-      project1task2();
+      shoutingTask();
     } else if (taskFlag==3) {
       project2task1();
     } else if (taskFlag==4) {
@@ -256,7 +255,7 @@ char* inputIdentification(char* input, int size) {
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 2
-// IT INCLUDES FUNCTIONS <project1task2>,
+// IT INCLUDES FUNCTIONS <shoutingTask>,
 // <forkThreads>, <randomNumber>, and <shouter>.
 //----------------------------------------------------------------------
 
@@ -269,7 +268,7 @@ const int maxInputSizeTask2 = 6;
 
 // Get input from user and calls getInput.
 // Create threads and call the shouter function.
-void project1task2(){
+void shoutingTask(){
   char* threadCount;
   char* shoutCount;
   char* threadInputType;
