@@ -19,8 +19,10 @@ using namespace std;
 int taskFlag;
 
 // Functions used in multiple tasks
-void invalidInput(char*);
 char* getInput(bool, int, int, int, char*, char*);
+void invalidInput(char*);
+int randomInteger(int, int);
+void busyWaitingLoop(int);
 
 // Functions for Project 1 -> Tasks 1 and 2
 // Task 1
@@ -30,11 +32,9 @@ char* inputIdentification(char*, int);
 // Task 2
 void shoutingTask();
 void forkShoutingThreads();
-int randomNumber(int, int);
 void shouter(int);
 
 // Functions for Project 2 -> Tasks 1-4
-void busyWaitingLoop(int);
 // Task 1
 void diningPhilosophersBusyWaiting();
 // Task 2
@@ -43,15 +43,6 @@ void diningPhilosophersSemaphores();
 void postOfficeSimulator();
 // Task 4
 void readersWritersProblem();
-
-
-// Constant shouting strings
-const char* shout1 = "I should not have said that.";
-const char* shout2 = "My father will hear about this.";
-const char* shout3 = "But I AM the chosen one.";
-const char* shout4 = "Follow the spiders? Why couldn't it be 'follow the butterflies'?";
-const char* shout5 = "You've got the emotional range of a teaspoon.";
-const char* shout6 = "I suspect Nargles are behind it.";
 
 
 
@@ -93,11 +84,6 @@ ThreadTest()
 // Functions used by multiple tasks
 // -----------------------------------------------------------------------------
 
-// Prints error if input was invalid, and then ends the current thread to exit the program
-void invalidInput(char* invalidInputMessage) {
-  printf("%s\n", invalidInputMessage);
-  currentThread->Finish();
-}
 
 // Gets user input and check if it's an integer and in the correct range.
 // Returns either: the integer value correctly input from the user OR -1
@@ -135,6 +121,17 @@ char* getInput(bool intRequired, int maxInputSize, int maxIntegerSize, int minIn
   } else {
     invalidInput(invalidInputMessage);
   }
+}
+
+// Prints error if input was invalid, and then ends the current thread to exit the program
+void invalidInput(char* invalidInputMessage) {
+  printf("%s\n", invalidInputMessage);
+  currentThread->Finish();
+}
+
+// Generates a random number in a specific range
+int randomInteger(int upperLimit, int lowerLimit) {
+  int random = (Random()%((upperLimit)-lowerLimit))+lowerLimit;
 }
 
 //----------------------------------------------------------------------
@@ -256,15 +253,22 @@ char* inputIdentification(char* input, int size) {
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 2
 // IT INCLUDES FUNCTIONS <shoutingTask>,
-// <forkShoutingThreads>, <randomNumber>, and <shouter>.
+// <forkShoutingThreads>, <randomInteger>, and <shouter>.
 //----------------------------------------------------------------------
 
 
 int globalShoutCount;
 int globalThreadCount;
-int maxIntegerSizeTask2 = 1001;
-int minIntegerSizeTask2 = 1;
+const int maxIntegerSizeTask2 = 1001;
+const int minIntegerSizeTask2 = 1;
 const int maxInputSizeTask2 = 6;
+const char* shout1 = "I should not have said that.";
+const char* shout2 = "My father will hear about this.";
+const char* shout3 = "But I AM the chosen one.";
+const char* shout4 = "Follow the spiders? Why couldn't it be 'follow the butterflies'?";
+const char* shout5 = "You've got the emotional range of a teaspoon.";
+const char* shout6 = "I suspect Nargles are behind it.";
+
 
 // Get input from user and calls getInput.
 // Create threads and call the shouter function.
@@ -297,10 +301,6 @@ void forkShoutingThreads() {
   }
 }
 
-// Generates a random number in a specific range
-int randomNumber(int upperLimit, int lowerLimit) {
-  int random = (Random()%((upperLimit)-lowerLimit))+lowerLimit;
-}
 
 // Will decide thread phrase to shout at random and keep track of # of shouts.
 void shouter(int thread){
@@ -308,10 +308,10 @@ void shouter(int thread){
   int shoutsDone = 0;
   int upperBusyLoops = 7;
   int lowerBusyLoops = 3;
-  int waitGoal = randomNumber(upperBusyLoops, lowerBusyLoops);
+  int waitGoal = randomInteger(upperBusyLoops, lowerBusyLoops);
   int upperShoutStrings = 7;
   int lowerShoutStrings = 1;
-  int randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+  int randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
 
   while(shoutsDone<globalShoutCount) {
     while((waitsDone>=0) && (waitsDone<waitGoal)){
@@ -321,38 +321,38 @@ void shouter(int thread){
     switch (randomShout) {
       case(1): {
         printf("Shouter %d: %s\n", thread, shout1);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(2): {
         printf("Shouter %d: %s\n", thread, shout2);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(3): {
         printf("Shouter %d: %s\n", thread, shout3);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(4): {
         printf("Shouter %d: %s\n", thread, shout4);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(5): {
         printf("Shouter %d: %s\n", thread, shout5);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(6): {
         printf("Shouter %d: %s\n", thread, shout6);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
     }
     shoutsDone++;
     waitsDone = 0;
-    waitGoal = randomNumber(upperBusyLoops, lowerBusyLoops);
+    waitGoal = randomInteger(upperBusyLoops, lowerBusyLoops);
   }
 }
 
