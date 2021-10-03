@@ -29,6 +29,7 @@ void shouter(int);
 
 // Functions for Project 2 -> Tasks 1-4
 void busyWaitingLoop(int);
+int diningPhilosophersGetInput(char*);
 // Task 1
 void project2task1();
 // Task 2
@@ -39,9 +40,9 @@ void project2task3();
 void project2task4();
 
 
-// Functions used in multiple
+// Functions used in multiple tasks
 void invalidInput(char*);
-int getIntegerInput(int, int);
+int getIntegerInput(int, int, char*, char*);
 
 
 // global flag to execute a particular task
@@ -104,10 +105,12 @@ void invalidInput(char* invalidInputMessage) {
 // Gets user input and check if it's an integer and in the correct range.
 // Returns either: the integer value correctly input from the user OR -1
 // if the value entered is not valid.
-int getIntegerInput(int maxInputSize, int maxIntegerSize) {
+int getIntegerInput(int maxInputSize, int maxIntegerSize, char* inputRequest, char* invalidInputMessage) {
   char* input = new char[maxInputSize];
   char* inputType;
   int integerInput;
+
+  printf("%s\n", inputRequest);
 
   fgets(input, maxInputSize, stdin);
 
@@ -119,14 +122,14 @@ int getIntegerInput(int maxInputSize, int maxIntegerSize) {
       if ((integerInput>0) && (integerInput<maxIntegerSize)) {
         return integerInput;
       } else {
-        return -1;
+        invalidInput(invalidInputMessage);
       }
     } else {
-      return -1;
+      invalidInput(invalidInputMessage);
     }
   }
   else {
-    return -1;
+    invalidInput(invalidInputMessage);
   }
 }
 
@@ -182,8 +185,6 @@ int validateInputSize(char* input, int size) {
   bool tooLong;
   if (input[0]=='\n'){
     empty = true;
-    // delete this line **********************************************************************************
-    printf("This should be an invalid input, whats up?\n\n");
   }
   while (empty) {
     printf("You didn't input anything. Try again!\n\n");
@@ -292,22 +293,14 @@ void project1task2(){
   char* threadInput;
   char* shoutInput;
   char* invalidInputMessage = "\nYour input was either not a positive integer, or it was too large. Try again.\n\n";
+  char* threadRequstMessage = "Enter number of threads (1-1000): ";
+  char* shoutRequestMessage = "\nEnter number of shouts (1-1000): ";
 
-  printf("Enter number of threads (1-1000): ");
-  threadCount = getIntegerInput(maxInputSizeTask2, maxIntegerSizeTask2);
-  if (threadCount==-1) {
-    invalidInput(invalidInputMessage);
-  } else {
-    globalThreadCount = threadCount;
-  }
+  threadCount = getIntegerInput(maxInputSizeTask2, maxIntegerSizeTask2, threadRequstMessage, invalidInputMessage);
+  globalThreadCount = threadCount;
 
-  printf("\nEnter number of shouts (1-1000): ");
-  shoutCount = getIntegerInput(maxInputSizeTask2, maxIntegerSizeTask2);
-  if (shoutCount==-1) {
-    invalidInput(invalidInputMessage);
-  } else {
-    globalShoutCount = shoutCount;
-  }
+  shoutCount = getIntegerInput(maxInputSizeTask2, maxIntegerSizeTask2, shoutRequestMessage, invalidInputMessage);
+  globalShoutCount = shoutCount;
 
   forkThreads();
 }
@@ -381,36 +374,24 @@ void shouter(int thread){
 }
 
 
-
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 3
 // IT INCLUDES FUNCTIONS <project2task1>
 //----------------------------------------------------------------------
 
-int maxInputSizeTask3 = 5;
-int maxIntegerSizeTask3 = 256;
+int maxInputSizeProject2 = 5;
+int maxIntegerSizeProject2 = 256;
+char* philospherRequestMessage = "\nPlease input the number of philosophers you would like.\n";
+char* mealsRequestMessage = "\nPlease input the number of meals you would like.\n";
+char* invalidInputMessage = "\nYou didn't input properly. Please input an integer greater than zero and less than 256.\n\n";
 
 
 void project2task1() {
   printf("You have selected task 3. Congrats.\n");
 
   int philosophers, meals;
-  char* inputType;
-  char* invalidInputMessage = "\nYou didn't input properly. Please input an integer greater than zero and less than 256.\n\n";
-
-  printf("Please input the number of philosophers you would like.\n\n");
-  philosophers = getIntegerInput(maxInputSizeTask3, maxIntegerSizeTask3);
-  if (philosophers==-1) {
-      invalidInput(invalidInputMessage);
-  }
-  printf("Thanks for inputting properly, you input %d\n", philosophers);
-
-  printf("Please input the number of meals you would like.\n\n");
-  meals = getIntegerInput(maxInputSizeTask3, maxIntegerSizeTask3);
-  if (meals==-1) {
-      invalidInput(invalidInputMessage);
-  }
-  printf("Thanks for inputting properly, you input %d\n", meals);
+  philosophers = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, philospherRequestMessage, invalidInputMessage);
+  meals = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, mealsRequestMessage, invalidInputMessage);
 }
 
 
@@ -422,7 +403,9 @@ void project2task1() {
 void project2task2() {
   printf("You have selected task 4. Congrats.\n");
 
-
+  int philosophers, meals;
+  philosophers = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, philospherRequestMessage, invalidInputMessage);
+  meals = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, mealsRequestMessage, invalidInputMessage);
 }
 
 
@@ -433,6 +416,16 @@ void project2task2() {
 
 void project2task3() {
   printf("You have selected task 5. Congrats.\n");
+
+  char* peopleRequestMessage = "\nPlease input the number of people: \n";
+  char* storageRequestMessage = "\nPlease input the amount of storage each person has: \n";
+  char* numMessagesRequestMessage = "\nPlease input the number of total messages: \n";
+
+  int people, storage, numMessages;
+  people = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, peopleRequestMessage, invalidInputMessage);
+  storage = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, storageRequestMessage, invalidInputMessage);
+  numMessages = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, numMessagesRequestMessage, invalidInputMessage);
+
 }
 
 
@@ -443,4 +436,14 @@ void project2task3() {
 
 void project2task4() {
   printf("You have selected task 6. Congrats.\n");
+
+  char* readersRequestMessage = "\nPlease input the number of readers: \n";
+  char* writersRequestMessage = "\nPlease input the number of writers: \n";
+  char* maxReadersRequestMessage = "\nPlease input the maximum number of readers at a time: \n";
+
+  int readers, writers, maxReaders;
+  readers = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, readersRequestMessage, invalidInputMessage);
+  writers = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, writersRequestMessage, invalidInputMessage);
+  maxReaders = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, maxReadersRequestMessage, invalidInputMessage);
+
 }
