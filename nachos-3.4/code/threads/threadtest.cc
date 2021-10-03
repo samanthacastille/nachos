@@ -18,7 +18,6 @@ using namespace std;
 // Functions for Project 1 -> Tasks 1 and 2
 // Task 1
 void identifyInput(int);
-char* task1GetInput();
 int validateInputSize(char*, int);
 char* inputIdentification(char*, int);
 // Task 2
@@ -29,7 +28,6 @@ void shouter(int);
 
 // Functions for Project 2 -> Tasks 1-4
 void busyWaitingLoop(int);
-int diningPhilosophersGetInput(char*);
 // Task 1
 void project2task1();
 // Task 2
@@ -42,7 +40,7 @@ void project2task4();
 
 // Functions used in multiple tasks
 void invalidInput(char*);
-int getIntegerInput(int, int, char*, char*);
+char* getInput(bool, int, int, char*, char*);
 
 
 // global flag to execute a particular task
@@ -105,7 +103,7 @@ void invalidInput(char* invalidInputMessage) {
 // Gets user input and check if it's an integer and in the correct range.
 // Returns either: the integer value correctly input from the user OR -1
 // if the value entered is not valid.
-int getIntegerInput(int maxInputSize, int maxIntegerSize, char* inputRequest, char* invalidInputMessage) {
+char* getInput(bool intRequired, int maxInputSize, int maxIntegerSize, char* inputRequest, char* invalidInputMessage) {
   char* input = new char[maxInputSize];
   char* inputType;
   int integerInput;
@@ -118,24 +116,31 @@ int getIntegerInput(int maxInputSize, int maxIntegerSize, char* inputRequest, ch
   if (validateResult==1) {
     inputType = inputIdentification(input, maxInputSize);
     if (inputType=="integer") {
-      integerInput = atoi(input);
-      if ((integerInput>0) && (integerInput<maxIntegerSize)) {
-        return integerInput;
+      if (intRequired==true) {
+        integerInput = atoi(input);
+        if ((integerInput>0) && (integerInput<maxIntegerSize)) {
+          return input;
+        } else {
+          invalidInput(invalidInputMessage);
+        }
       } else {
-        invalidInput(invalidInputMessage);
+        return inputType;
       }
     } else {
-      invalidInput(invalidInputMessage);
+      if (intRequired==true) {
+        invalidInput(invalidInputMessage);
+      } else {
+        return inputType;
+      }
     }
-  }
-  else {
+  } else {
     invalidInput(invalidInputMessage);
   }
 }
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF CODE FOR TASK 1
-// IT INCLUDES FUNCTIONS <identifyInput>, <task1getIntegerInput>,
+// IT INCLUDES FUNCTIONS <identifyInput>,
 // <validateInputSize>, and <inputIdentification>.
 //----------------------------------------------------------------------
 
@@ -144,38 +149,17 @@ const int maxInputSizeTask1 = 256;
 
 // This function invokes task 1 with a thread created from the ThreadTest function.
 void identifyInput(int thread) {
-  printf("Please give me an input.\n");
 
-  char* result = task1GetInput();
-  if (result=="Your input was too long. It was discarded.\nPlease rerun and keep your input under: ") {
-    printf("%s %d.\n\n", result, (maxInputSizeTask1 - 1));
-  }
-  else {
-    printf("\nYour input was of type: %s\n\n", result);
-  }
+  char* inputString;
+  char* result;
+  char* inputRequestMessage = "Please give me an input.\n";
+  char* task1InvalidInputMessage = "Your input was too long. It was discarded.\nPlease rerun and keep your input under 256 characters ";
+
+  result = getInput(false, maxInputSizeTask1, 0, inputRequestMessage, task1InvalidInputMessage);
+
+  printf("\nYour input was of type: %s\n\n", result);
 }
 
-// This function recieves input from the user.
-// It calls validateInputSize to validate the input size.
-// If the input size is fine, it calls inputIdentification
-// thread returns the input type.
-char* task1GetInput() {
-	char* input;
-  char* tooLongInputMessage = "Your input was too long. It was discarded.\nPlease rerun and keep your input under: ";
-  char* inputType;
-  input = new char[maxInputSizeTask1];
-
-  fgets(input, maxInputSizeTask1, stdin);
-
-  int validateResult = validateInputSize(input, maxInputSizeTask1);
-  if (validateResult==1) {
-    inputType = inputIdentification(input, maxInputSizeTask1);
-  }
-  else if (validateResult==-1){
-    return tooLongInputMessage;
-  }
-  return inputType;
-}
 
 // This function validates the input size.
 // If the input is empty, it asks for it again.
@@ -194,7 +178,7 @@ int validateInputSize(char* input, int size) {
       empty = true;
     } else {
       empty = false;
-      return 1;;
+      return 1;
     }
   }
   if ((input[size-1]==0) && ((input[size-2]=='\n') || (input[size-2]==0))) {
@@ -283,11 +267,11 @@ int maxIntegerSizeTask2 = 1001;
 const int maxInputSizeTask2 = 6;
 
 
-// Get input from user and calls getIntegerInput.
+// Get input from user and calls getInput.
 // Create threads and call the shouter function.
 void project1task2(){
-  int threadCount;
-  int shoutCount;
+  char* threadCount;
+  char* shoutCount;
   char* threadInputType;
   char* shoutInputType;
   char* threadInput;
@@ -296,11 +280,11 @@ void project1task2(){
   char* threadRequstMessage = "Enter number of threads (1-1000): ";
   char* shoutRequestMessage = "\nEnter number of shouts (1-1000): ";
 
-  threadCount = getIntegerInput(maxInputSizeTask2, maxIntegerSizeTask2, threadRequstMessage, invalidInputMessage);
-  globalThreadCount = threadCount;
+  threadCount = getInput(true, maxInputSizeTask2, maxIntegerSizeTask2, threadRequstMessage, invalidInputMessage);
+  globalThreadCount = atoi(threadCount);
 
-  shoutCount = getIntegerInput(maxInputSizeTask2, maxIntegerSizeTask2, shoutRequestMessage, invalidInputMessage);
-  globalShoutCount = shoutCount;
+  shoutCount = getInput(true, maxInputSizeTask2, maxIntegerSizeTask2, shoutRequestMessage, invalidInputMessage);
+  globalShoutCount = atoi(shoutCount);
 
   forkThreads();
 }
@@ -388,10 +372,12 @@ char* invalidInputMessage = "\nYou didn't input properly. Please input an intege
 
 void project2task1() {
   printf("You have selected task 3. Congrats.\n");
-
+  char* inputString;
   int philosophers, meals;
-  philosophers = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, philospherRequestMessage, invalidInputMessage);
-  meals = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, mealsRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, philospherRequestMessage, invalidInputMessage);
+  philosophers = atoi(inputString);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, mealsRequestMessage, invalidInputMessage);
+  meals = atoi(inputString);
 }
 
 
@@ -402,10 +388,13 @@ void project2task1() {
 
 void project2task2() {
   printf("You have selected task 4. Congrats.\n");
+  char* inputString;
 
   int philosophers, meals;
-  philosophers = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, philospherRequestMessage, invalidInputMessage);
-  meals = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, mealsRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, philospherRequestMessage, invalidInputMessage);
+  philosophers = atoi(inputString);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, mealsRequestMessage, invalidInputMessage);
+  meals = atoi(inputString);
 }
 
 
@@ -417,14 +406,18 @@ void project2task2() {
 void project2task3() {
   printf("You have selected task 5. Congrats.\n");
 
+  char* inputString;
   char* peopleRequestMessage = "\nPlease input the number of people: \n";
   char* storageRequestMessage = "\nPlease input the amount of storage each person has: \n";
   char* numMessagesRequestMessage = "\nPlease input the number of total messages: \n";
 
   int people, storage, numMessages;
-  people = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, peopleRequestMessage, invalidInputMessage);
-  storage = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, storageRequestMessage, invalidInputMessage);
-  numMessages = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, numMessagesRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, peopleRequestMessage, invalidInputMessage);
+  people = atoi(inputString);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, storageRequestMessage, invalidInputMessage);
+  storage = atoi(inputString);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, numMessagesRequestMessage, invalidInputMessage);
+  numMessages = atoi(inputString);
 
 }
 
@@ -437,13 +430,17 @@ void project2task3() {
 void project2task4() {
   printf("You have selected task 6. Congrats.\n");
 
+  char* inputString;
   char* readersRequestMessage = "\nPlease input the number of readers: \n";
   char* writersRequestMessage = "\nPlease input the number of writers: \n";
   char* maxReadersRequestMessage = "\nPlease input the maximum number of readers at a time: \n";
 
   int readers, writers, maxReaders;
-  readers = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, readersRequestMessage, invalidInputMessage);
-  writers = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, writersRequestMessage, invalidInputMessage);
-  maxReaders = getIntegerInput(maxInputSizeProject2, maxIntegerSizeProject2, maxReadersRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, readersRequestMessage, invalidInputMessage);
+  readers = atoi(inputString);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, writersRequestMessage, invalidInputMessage);
+  writers = atoi(inputString);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, maxReadersRequestMessage, invalidInputMessage);
+  maxReaders = atoi(inputString);
 
 }
