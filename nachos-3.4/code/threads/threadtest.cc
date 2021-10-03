@@ -23,7 +23,6 @@ int validateInputSize(char*, int);
 char* inputIdentification(char*, int);
 // Task 2
 void project1task2();
-int task2GetInput();
 void forkThreads();
 int randomNumber(int, int);
 void shouter(int);
@@ -39,6 +38,10 @@ void project2task3();
 // Task 4
 void project2task4();
 
+
+// Functions used in multiple
+void invalidInput(char*);
+int getIntegerInput(int, int);
 
 
 // global flag to execute a particular task
@@ -88,10 +91,48 @@ ThreadTest()
 	  currentThread->Finish();
 }
 
+// -----------------------------------------------------------------------------
+// Functions used by multiple tasks
+// -----------------------------------------------------------------------------
+
+// Prints error if input was invalid, and then ends the current thread to exit the program
+void invalidInput(char* invalidInputMessage) {
+  printf("%s\n", invalidInputMessage);
+  currentThread->Finish();
+}
+
+// Gets user input and check if it's an integer and in the correct range.
+// Returns either: the integer value correctly input from the user OR -1
+// if the value entered is not valid.
+int getIntegerInput(int maxInputSize, int maxIntegerSize) {
+  char* input = new char[maxInputSize];
+  char* inputType;
+  int integerInput;
+
+  fgets(input, maxInputSize, stdin);
+
+  int validateResult = validateInputSize(input, maxInputSize);
+  if (validateResult==1) {
+    inputType = inputIdentification(input, maxInputSize);
+    if (inputType=="integer") {
+      integerInput = atoi(input);
+      if ((integerInput>0) && (integerInput<maxIntegerSize)) {
+        return integerInput;
+      } else {
+        return -1;
+      }
+    } else {
+      return -1;
+    }
+  }
+  else {
+    return -1;
+  }
+}
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF CODE FOR TASK 1
-// IT INCLUDES FUNCTIONS <identifyInput>, <task1GetInput>,
+// IT INCLUDES FUNCTIONS <identifyInput>, <task1getIntegerInput>,
 // <validateInputSize>, and <inputIdentification>.
 //----------------------------------------------------------------------
 
@@ -135,12 +176,14 @@ char* task1GetInput() {
 
 // This function validates the input size.
 // If the input is empty, it asks for it again.
-// If the input is too long, it discards it and tells the user to start over.
+// If the input is too long, it returns -1, otherwise it returns 1
 int validateInputSize(char* input, int size) {
   bool empty = false;
   bool tooLong;
   if (input[0]=='\n'){
     empty = true;
+    // delete this line **********************************************************************************
+    printf("This should be an invalid input, whats up?\n\n");
   }
   while (empty) {
     printf("You didn't input anything. Try again!\n\n");
@@ -228,17 +271,18 @@ char* inputIdentification(char* input, int size) {
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 2
-// IT INCLUDES FUNCTIONS <project1task2>, <task2GetInput>,
+// IT INCLUDES FUNCTIONS <project1task2>,
 // <forkThreads>, <randomNumber>, and <shouter>.
 //----------------------------------------------------------------------
 
 
 int globalShoutCount;
 int globalThreadCount;
+int maxIntegerSizeTask2 = 1001;
 const int maxInputSizeTask2 = 6;
 
 
-// Get input from user and calls task2GetInput.
+// Get input from user and calls getIntegerInput.
 // Create threads and call the shouter function.
 void project1task2(){
   int threadCount;
@@ -247,21 +291,20 @@ void project1task2(){
   char* shoutInputType;
   char* threadInput;
   char* shoutInput;
+  char* invalidInputMessage = "\nYour input was either not a positive integer, or it was too large. Try again.\n\n";
 
   printf("Enter number of threads (1-1000): ");
-  threadCount = task2GetInput();
+  threadCount = getIntegerInput(maxInputSizeTask2, maxIntegerSizeTask2);
   if (threadCount==-1) {
-    printf("\nYour input was either not a positive integer, or it was too large. Try again.\n\n");
-    currentThread->Finish();
+    invalidInput(invalidInputMessage);
   } else {
     globalThreadCount = threadCount;
   }
 
   printf("\nEnter number of shouts (1-1000): ");
-  shoutCount = task2GetInput();
+  shoutCount = getIntegerInput(maxInputSizeTask2, maxIntegerSizeTask2);
   if (shoutCount==-1) {
-    printf("\nYour input was either not a positive integer, or it was too large. Try again.\n\n");
-    currentThread->Finish();
+    invalidInput(invalidInputMessage);
   } else {
     globalShoutCount = shoutCount;
   }
@@ -269,34 +312,6 @@ void project1task2(){
   forkThreads();
 }
 
-// Gets user input and check if it's an integer and in the correct range.
-// Returns either: the integer value correctly input from the user OR -1
-// if the value entered is not valid.
-int task2GetInput() {
-  char* input = new char[maxInputSizeTask2];
-  char* inputType;
-  int integerInput;
-
-  fgets(input, maxInputSizeTask2, stdin);
-
-  int validateResult = validateInputSize(input, maxInputSizeTask2);
-  if (validateResult==1) {
-    inputType = inputIdentification(input, maxInputSizeTask2);
-    if (inputType=="integer") {
-      integerInput = atoi(input);
-      if ((integerInput>0) && (integerInput<1001)) {
-        return integerInput;
-      } else {
-        return -1;
-      }
-    } else {
-      return -1;
-    }
-  }
-  else {
-    return -1;
-  }
-}
 
 // Forks specified number of threads to do the shouting
 void forkThreads() {
@@ -367,15 +382,37 @@ void shouter(int thread){
 
 
 
-
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 3
 // IT INCLUDES FUNCTIONS <project2task1>
 //----------------------------------------------------------------------
 
+int maxInputSizeTask3 = 5;
+int maxIntegerSizeTask3 = 256;
+
+
 void project2task1() {
   printf("You have selected task 3. Congrats.\n");
+
+  int philosophers, meals;
+  char* inputType;
+  char* invalidInputMessage = "\nYou didn't input properly. Please input an integer greater than zero and less than 256.\n\n";
+
+  printf("Please input the number of philosophers you would like.\n\n");
+  philosophers = getIntegerInput(maxInputSizeTask3, maxIntegerSizeTask3);
+  if (philosophers==-1) {
+      invalidInput(invalidInputMessage);
+  }
+  printf("Thanks for inputting properly, you input %d\n", philosophers);
+
+  printf("Please input the number of meals you would like.\n\n");
+  meals = getIntegerInput(maxInputSizeTask3, maxIntegerSizeTask3);
+  if (meals==-1) {
+      invalidInput(invalidInputMessage);
+  }
+  printf("Thanks for inputting properly, you input %d\n", meals);
 }
+
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 4
@@ -384,6 +421,8 @@ void project2task1() {
 
 void project2task2() {
   printf("You have selected task 4. Congrats.\n");
+
+
 }
 
 
