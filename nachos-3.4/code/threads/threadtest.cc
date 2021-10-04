@@ -37,6 +37,8 @@ void shouter(int);
 // Functions for Project 2 -> Tasks 1-4
 // Task 1
 void diningPhilosophersBusyWaiting();
+void philosopher(int);
+void forkPhilosophers(int);
 // Task 2
 void diningPhilosophersSemaphores();
 // Task 3
@@ -132,6 +134,12 @@ void invalidInput(char* invalidInputMessage) {
 // Generates a random number in a specific range
 int randomInteger(int upperLimit, int lowerLimit) {
   int random = (Random()%((upperLimit)-lowerLimit))+lowerLimit;
+}
+
+void busyWaitingLoop(int loops) {
+  for (int i=0; i<loops; i++) {
+    currentThread->Yield();
+  }
 }
 
 //----------------------------------------------------------------------
@@ -364,26 +372,76 @@ void shouter(int thread){
 //----------------------------------------------------------------------
 
 
+int philosophers, meals;
+int mealsEaten = 0;
 int maxInputSizeProject2 = 16;
 int maxIntegerSizeProject2 = 10000;
 int minPhilosophers = 2;
 int minMeals = 1;
+int randomInt;
+bool* chopstick;
 char* philospherRequestMessage = "\nPlease input the number of philosophers you would like.\n";
 char* mealsRequestMessage = "\nPlease input the number of meals you would like.\n";
 char* invalidPhilosopherInputMessage = "\nYou didn't input properly. You need more than 1 philosopher, and less than 10,000 philosophers.\n\n";
 char* invalidInputMessage = "\nYou didn't input properly. Please input an integer greater than zero and less than 10,000.\n\n";
 
-
-void diningPhilosophersBusyWaiting() {
-  printf("You have selected task 3. Congrats.\n");
-  char* inputString;
-  int philosophers, meals;
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
-  philosophers = atoi(inputString);
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minMeals, mealsRequestMessage, invalidInputMessage);
-  meals = atoi(inputString);
+void forkPhilosophers(int numPhilosophers) {
+  for (int i=0; i<numPhilosophers; i++) {
+    chopstick[i] = true;
+    printf("\nPhilosopher %d has entered the room.\n-Philosopher %d is waiting to sit.\n", i, i);
+    Thread *t = new Thread("Philosopher Thread");
+    t->Fork(philosopher, i);
+  }
 }
 
+void philosopher(int thread) {
+  while (mealsEaten<meals) {
+    currentThread->Yield();
+    printf("--Philosopher %d is trying to pick up chopstick %d.\n", thread, thread);
+    while (!chopstick[thread]) {
+      currentThread->Yield();
+    }
+    chopstick[thread] = false;
+    printf("---Philosopher %d picked up chopstick [%d].\n", thread, thread);
+
+    printf("--Philosopher %d is trying to pick up chopstick [%d].\n", thread, ((thread+1)%philosophers));
+    while (!chopstick[((thread+1)%philosophers)]) {
+      currentThread->Yield();
+    }
+    chopstick[((thread+1)%philosophers)] = false;
+    printf("---Philosopher %d picked up chopstick [%d].\n", thread, ((thread+1)%philosophers));
+    if (mealsEaten<meals) {
+      mealsEaten++;
+      printf("----Philosopher %d begins to eat (%d meals have been eaten so far).\n", thread, mealsEaten);
+      randomInt = randomInteger(3,7);
+      busyWaitingLoop(randomInt);
+    }
+    chopstick[thread] = true;
+    printf("------Philosopher %d drops chopstick [%d].\n", thread, thread);
+    chopstick[((thread+1)%philosophers)] = true;
+    printf("------Philosopher %d drops chopstick [%d].\n", thread, ((thread+1)%philosophers));
+    printf("-------Philosopher %d is thinking.\n", thread);
+    if (mealsEaten==meals) {
+      printf("--------Philosopher %d is waiting to leave.\n", thread);
+      currentThread->Finish();
+    }
+  }
+}
+
+void diningPhilosophersBusyWaiting() {
+  printf("Dining Philosophers problem using busy waiting loops.\n");
+  char* inputString;
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
+  philosophers = atoi(inputString);
+  chopstick = new bool[philosophers];
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minMeals, mealsRequestMessage, invalidInputMessage);
+  meals = atoi(inputString);
+
+  forkPhilosophers(philosophers);
+  printf("\nAll philosophers have sat down.\n");
+  currentThread->Yield();
+  currentThread->Finish();
+}
 
 
 //----------------------------------------------------------------------
@@ -395,7 +453,6 @@ void diningPhilosophersSemaphores() {
   printf("You have selected task 4. Congrats.\n");
   char* inputString;
 
-  int philosophers, meals;
   inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
   philosophers = atoi(inputString);
   inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minMeals, mealsRequestMessage, invalidInputMessage);
