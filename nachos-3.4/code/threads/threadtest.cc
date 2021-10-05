@@ -404,7 +404,7 @@ void diningPhilosophersBusyWaiting() {
 
   forkPhilosophersBWL(philosophers);
   currentThread->Yield();
-  if (waitingToLeave==(philosophers-1)) {
+  if (waitingToLeave==(philosophers)) {
     printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
   }
   currentThread->Finish();
@@ -520,9 +520,22 @@ void forkPhilosophersSem(int numPhilosophers) {
 // Each philosopher goes through this process until all meals are eaten and
 // all philosophers are ready to leave
 void philosopherSem(int thread) {
-  printf("Philosopher %d is here to eat and think.\n", thread);
+  if (mealsEaten==meals) {
+    printf("All meals have been eaten!\n");
+    printf("--------Philosopher %d is waiting to leave.\n", thread);
+    waitingToLeave++;
+    currentThread->Finish();
+  }
+  while (mealsEaten<meals) {
 
 
+    if (mealsEaten==meals) {
+      printf("All meals have been eaten!\n");
+      printf("--------Philosopher %d is waiting to leave.\n", thread);
+      waitingToLeave++;
+      currentThread->Finish();
+    }
+  }
 }
 
 
