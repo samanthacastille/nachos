@@ -380,6 +380,7 @@ int minPhilosophers = 2;
 int minMeals = 1;
 int randomInt;
 int sitting;
+int waitingToLeave;
 bool* chopstick;
 char* philospherRequestMessage = "\nPlease input the number of philosophers you would like.\n";
 char* mealsRequestMessage = "\nPlease input the number of meals you would like.\n";
@@ -404,7 +405,9 @@ void forkPhilosophers(int numPhilosophers) {
 
 void philosopher(int thread) {
   if (mealsEaten==meals) {
+    printf("All meals have been eaten!\n");
     printf("--------Philosopher %d is waiting to leave.\n", thread);
+    waitingToLeave++;
     currentThread->Finish();
   }
   while (mealsEaten<meals) {
@@ -435,7 +438,12 @@ void philosopher(int thread) {
     randomInt = randomInteger(3,7);
     busyWaitingLoop(randomInt);
     if (mealsEaten==meals) {
+      printf("All meals have been eaten!\n");
       printf("--------Philosopher %d is waiting to leave.\n", thread);
+      waitingToLeave++;
+      if (waitingToLeave==(philosophers)) {
+        printf("All philosophers are done eating, and they all leave the table together.\n");
+      }
       currentThread->Finish();
     }
   }
@@ -444,6 +452,7 @@ void philosopher(int thread) {
 void diningPhilosophersBusyWaiting() {
   printf("Dining Philosophers problem using busy waiting loops.\n");
   sitting = 0;
+  waitingToLeave=0;
   char* inputString;
   inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
   philosophers = atoi(inputString);
@@ -452,6 +461,10 @@ void diningPhilosophersBusyWaiting() {
   meals = atoi(inputString);
 
   forkPhilosophers(philosophers);
+  currentThread->Yield();
+  if (waitingToLeave==(philosophers-1)) {
+    printf("All philosophers are done eating, and they all leave the table together.\n");
+  }
   currentThread->Finish();
 }
 
