@@ -37,10 +37,12 @@ void shouter(int);
 // Functions for Project 2 -> Tasks 1-4
 // Task 1
 void diningPhilosophersBusyWaiting();
-void philosopher(int);
-void forkPhilosophers(int);
+void philosopherBWL(int);
+void forkPhilosophersBWL(int);
 // Task 2
 void diningPhilosophersSemaphores();
+void philosopherSem(int);
+void forkPhilosophersSem(int);
 // Task 3
 void postOfficeSimulator();
 // Task 4
@@ -368,7 +370,8 @@ void shouter(int thread){
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 3
-// IT INCLUDES FUNCTIONS <diningPhilosophersBusyWaiting>
+// IT INCLUDES FUNCTIONS <diningPhilosophersBusyWaiting>,
+// <forkPhilosophersBWL>, and <philosopherBWL>.
 //----------------------------------------------------------------------
 
 
@@ -387,23 +390,46 @@ char* mealsRequestMessage = "\nPlease input the number of meals you would like.\
 char* invalidPhilosopherInputMessage = "\nYou didn't input properly. You need more than 1 philosopher, and less than 10,000 philosophers.\n\n";
 char* invalidInputMessage = "\nYou didn't input properly. Please input an integer greater than zero and less than 10,000.\n\n";
 
-void forkPhilosophers(int numPhilosophers) {
+// Main function for busy waiting Dining Philosophers
+void diningPhilosophersBusyWaiting() {
+  printf("Dining Philosophers problem using busy waiting loops.\n");
+  sitting = 0;
+  waitingToLeave=0;
+  char* inputString;
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
+  philosophers = atoi(inputString);
+  chopstick = new bool[philosophers];
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minMeals, mealsRequestMessage, invalidInputMessage);
+  meals = atoi(inputString);
+
+  forkPhilosophersBWL(philosophers);
+  currentThread->Yield();
+  if (waitingToLeave==(philosophers-1)) {
+    printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
+  }
+  currentThread->Finish();
+}
+
+// Have them all sit and then for threads
+void forkPhilosophersBWL(int numPhilosophers) {
   for (int i=0; i<numPhilosophers; i++) {
     chopstick[i] = true;
     sitting++;
-    printf("\nPhilosopher %d has entered the room.\n-Philosopher %d is waiting to sit.\n", i, i);
+    printf("\nPhilosopher %d has entered the room.\n-Philosopher %d is waiting to sit.", i, i);
     if (sitting==numPhilosophers) {
-      printf("All philosophers have sat down.\n");
+      printf("\n\n***All philosophers have sat down.***\n\n");
       break;
     }
   }
   for (int i=0; i<numPhilosophers; i++) {
     Thread *t = new Thread("Philosopher Thread");
-    t->Fork(philosopher, i);
+    t->Fork(philosopherBWL, i);
   }
 }
 
-void philosopher(int thread) {
+// Each philosopher goes through this process until all meals are eaten and
+// all philosophers are ready to leave
+void philosopherBWL(int thread) {
   if (mealsEaten==meals) {
     printf("All meals have been eaten!\n");
     printf("--------Philosopher %d is waiting to leave.\n", thread);
@@ -442,30 +468,11 @@ void philosopher(int thread) {
       printf("--------Philosopher %d is waiting to leave.\n", thread);
       waitingToLeave++;
       if (waitingToLeave==(philosophers)) {
-        printf("All philosophers are done eating, and they all leave the table together.\n");
+        printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
       }
       currentThread->Finish();
     }
   }
-}
-
-void diningPhilosophersBusyWaiting() {
-  printf("Dining Philosophers problem using busy waiting loops.\n");
-  sitting = 0;
-  waitingToLeave=0;
-  char* inputString;
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
-  philosophers = atoi(inputString);
-  chopstick = new bool[philosophers];
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minMeals, mealsRequestMessage, invalidInputMessage);
-  meals = atoi(inputString);
-
-  forkPhilosophers(philosophers);
-  currentThread->Yield();
-  if (waitingToLeave==(philosophers-1)) {
-    printf("All philosophers are done eating, and they all leave the table together.\n");
-  }
-  currentThread->Finish();
 }
 
 
@@ -474,14 +481,46 @@ void diningPhilosophersBusyWaiting() {
 // IT INCLUDES FUNCTIONS <diningPhilosophersSemaphores>
 //----------------------------------------------------------------------
 
+// Main function for Dining Philosophers using Semaphores
 void diningPhilosophersSemaphores() {
-  printf("You have selected task 4. Congrats.\n");
-  char* inputString;
+  printf("Dining Philosophers problem using Semaphores.\n");
 
+  sitting = 0;
+  waitingToLeave=0;
+  char* inputString;
   inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
   philosophers = atoi(inputString);
   inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minMeals, mealsRequestMessage, invalidInputMessage);
   meals = atoi(inputString);
+
+  forkPhilosophersSem(philosophers);
+  currentThread->Yield();
+  if (waitingToLeave==(philosophers-1)) {
+    printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
+  }
+  currentThread->Finish();
+}
+
+// All philosophers enter and then sit down, then fork threads
+void forkPhilosophersSem(int numPhilosophers) {
+  for (int i=0; i<numPhilosophers; i++) {
+    sitting++;
+    printf("\nPhilosopher %d has entered the room.\n-Philosopher %d is waiting to sit.", i, i);
+    if (sitting==numPhilosophers) {
+      printf("\n\n***All philosophers have sat down.***\n\n");
+      break;
+    }
+  }
+  for (int i=0; i<numPhilosophers; i++) {
+    Thread *t = new Thread("Philosopher Thread");
+    t->Fork(philosopherSem, i);
+  }
+}
+
+// Each philosopher goes through this process until all meals are eaten and
+// all philosophers are ready to leave
+void philosopherSem(int thread) {
+  printf("Philosopher %d is here to eat and think.\n", thread);
 
 
 }
