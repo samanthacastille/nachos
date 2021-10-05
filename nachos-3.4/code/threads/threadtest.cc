@@ -19,8 +19,10 @@ using namespace std;
 int taskFlag;
 
 // Functions used in multiple tasks
+char* getInput(bool, int, int, int, char*, char*);
 void invalidInput(char*);
-char* getInput(bool, int, int, char*, char*);
+int randomInteger(int, int);
+void busyWaitingLoop(int);
 
 // Functions for Project 1 -> Tasks 1 and 2
 // Task 1
@@ -29,29 +31,20 @@ int validateInputSize(char*, int);
 char* inputIdentification(char*, int);
 // Task 2
 void shoutingTask();
-void forkThreads();
-int randomNumber(int, int);
+void forkShoutingThreads();
 void shouter(int);
 
 // Functions for Project 2 -> Tasks 1-4
-void busyWaitingLoop(int);
 // Task 1
-void project2task1();
+void diningPhilosophersBusyWaiting();
+void philosopher(int);
+void forkPhilosophers(int);
 // Task 2
-void project2task2();
+void diningPhilosophersSemaphores();
 // Task 3
-void project2task3();
+void postOfficeSimulator();
 // Task 4
-void project2task4();
-
-
-// Constant shouting strings
-const char* shout1 = "I should not have said that.";
-const char* shout2 = "My father will hear about this.";
-const char* shout3 = "But I AM the chosen one.";
-const char* shout4 = "Follow the spiders? Why couldn't it be 'follow the butterflies'?";
-const char* shout5 = "You've got the emotional range of a teaspoon.";
-const char* shout6 = "I suspect Nargles are behind it.";
+void readersWritersProblem();
 
 
 
@@ -73,13 +66,13 @@ ThreadTest()
     } else if (taskFlag==2) {
       shoutingTask();
     } else if (taskFlag==3) {
-      project2task1();
+      diningPhilosophersBusyWaiting();
     } else if (taskFlag==4) {
-      project2task2();
+      diningPhilosophersSemaphores();
     } else if (taskFlag==5) {
-      project2task3();
+      postOfficeSimulator();
     } else if (taskFlag==6) {
-      project2task4();
+      readersWritersProblem();
     } else {
       printf("You didn't use the -A command, or you didn't use it correctly.\n");
       printf("Please insert '-A' followed by which task you'd like to execute (1/2/3/4/5/6).\n");
@@ -93,16 +86,11 @@ ThreadTest()
 // Functions used by multiple tasks
 // -----------------------------------------------------------------------------
 
-// Prints error if input was invalid, and then ends the current thread to exit the program
-void invalidInput(char* invalidInputMessage) {
-  printf("%s\n", invalidInputMessage);
-  currentThread->Finish();
-}
 
 // Gets user input and check if it's an integer and in the correct range.
 // Returns either: the integer value correctly input from the user OR -1
 // if the value entered is not valid.
-char* getInput(bool intRequired, int maxInputSize, int maxIntegerSize, char* inputRequest, char* invalidInputMessage) {
+char* getInput(bool intRequired, int maxInputSize, int maxIntegerSize, int minIntegerSize, char* inputRequest, char* invalidInputMessage) {
   char* input = new char[maxInputSize];
   char* inputType;
   int integerInput;
@@ -117,7 +105,7 @@ char* getInput(bool intRequired, int maxInputSize, int maxIntegerSize, char* inp
     if (inputType=="integer") {
       if (intRequired==true) {
         integerInput = atoi(input);
-        if ((integerInput>0) && (integerInput<maxIntegerSize)) {
+        if ((integerInput>0) && (integerInput<maxIntegerSize) && (integerInput>=minIntegerSize)) {
           return input;
         } else {
           invalidInput(invalidInputMessage);
@@ -137,6 +125,23 @@ char* getInput(bool intRequired, int maxInputSize, int maxIntegerSize, char* inp
   }
 }
 
+// Prints error if input was invalid, and then ends the current thread to exit the program
+void invalidInput(char* invalidInputMessage) {
+  printf("%s\n", invalidInputMessage);
+  currentThread->Finish();
+}
+
+// Generates a random number in a specific range
+int randomInteger(int upperLimit, int lowerLimit) {
+  int random = (Random()%((upperLimit)-lowerLimit))+lowerLimit;
+}
+
+void busyWaitingLoop(int loops) {
+  for (int i=0; i<loops; i++) {
+    currentThread->Yield();
+  }
+}
+
 //----------------------------------------------------------------------
 // THIS IS THE START OF CODE FOR TASK 1
 // IT INCLUDES FUNCTIONS <identifyInput>,
@@ -152,11 +157,11 @@ void identifyInput(int thread) {
   char* inputString;
   char* result;
   char* inputRequestMessage = "Please give me an input.\n";
-  char* task1InvalidInputMessage = "Your input was too long. It was discarded.\nPlease rerun and keep your input under 256 characters ";
+  char* task1InvalidInputMessage = "Your input was too long. It was discarded.\nPlease rerun and keep your input under 256 characters.";
 
-  result = getInput(false, maxInputSizeTask1, 0, inputRequestMessage, task1InvalidInputMessage);
+  result = getInput(false, maxInputSizeTask1, 0, 0, inputRequestMessage, task1InvalidInputMessage);
 
-  printf("\nYour input was of type: %s\n\n", result);
+  printf("\nYour input was of type: %s.\n\n", result);
 }
 
 
@@ -256,14 +261,21 @@ char* inputIdentification(char* input, int size) {
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 2
 // IT INCLUDES FUNCTIONS <shoutingTask>,
-// <forkThreads>, <randomNumber>, and <shouter>.
+// <forkShoutingThreads>, <randomInteger>, and <shouter>.
 //----------------------------------------------------------------------
 
 
 int globalShoutCount;
 int globalThreadCount;
-int maxIntegerSizeTask2 = 1001;
+const int maxIntegerSizeTask2 = 1001;
+const int minIntegerSizeTask2 = 1;
 const int maxInputSizeTask2 = 6;
+const char* shout1 = "I should not have said that.";
+const char* shout2 = "My father will hear about this.";
+const char* shout3 = "But I AM the chosen one.";
+const char* shout4 = "Follow the spiders? Why couldn't it be 'follow the butterflies'?";
+const char* shout5 = "You've got the emotional range of a teaspoon.";
+const char* shout6 = "I suspect Nargles are behind it.";
 
 
 // Get input from user and calls getInput.
@@ -279,28 +291,24 @@ void shoutingTask(){
   char* threadRequstMessage = "Enter number of threads (1-1000): ";
   char* shoutRequestMessage = "\nEnter number of shouts (1-1000): ";
 
-  threadCount = getInput(true, maxInputSizeTask2, maxIntegerSizeTask2, threadRequstMessage, invalidInputMessage);
+  threadCount = getInput(true, maxInputSizeTask2, maxIntegerSizeTask2, minIntegerSizeTask2, threadRequstMessage, invalidInputMessage);
   globalThreadCount = atoi(threadCount);
 
-  shoutCount = getInput(true, maxInputSizeTask2, maxIntegerSizeTask2, shoutRequestMessage, invalidInputMessage);
+  shoutCount = getInput(true, maxInputSizeTask2, maxIntegerSizeTask2, minIntegerSizeTask2, shoutRequestMessage, invalidInputMessage);
   globalShoutCount = atoi(shoutCount);
 
-  forkThreads();
+  forkShoutingThreads();
 }
 
 
 // Forks specified number of threads to do the shouting
-void forkThreads() {
+void forkShoutingThreads() {
   for(int i=0;i<globalThreadCount;i++){
     Thread *t = new Thread("Shouting Thread");
     t->Fork(shouter, i+1);
   }
 }
 
-// Generates a random number in a specific range
-int randomNumber(int upperLimit, int lowerLimit) {
-  int random = (Random()%((upperLimit)-lowerLimit))+lowerLimit;
-}
 
 // Will decide thread phrase to shout at random and keep track of # of shouts.
 void shouter(int thread){
@@ -308,10 +316,10 @@ void shouter(int thread){
   int shoutsDone = 0;
   int upperBusyLoops = 7;
   int lowerBusyLoops = 3;
-  int waitGoal = randomNumber(upperBusyLoops, lowerBusyLoops);
+  int waitGoal = randomInteger(upperBusyLoops, lowerBusyLoops);
   int upperShoutStrings = 7;
   int lowerShoutStrings = 1;
-  int randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+  int randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
 
   while(shoutsDone<globalShoutCount) {
     while((waitsDone>=0) && (waitsDone<waitGoal)){
@@ -321,88 +329,156 @@ void shouter(int thread){
     switch (randomShout) {
       case(1): {
         printf("Shouter %d: %s\n", thread, shout1);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(2): {
         printf("Shouter %d: %s\n", thread, shout2);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(3): {
         printf("Shouter %d: %s\n", thread, shout3);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(4): {
         printf("Shouter %d: %s\n", thread, shout4);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(5): {
         printf("Shouter %d: %s\n", thread, shout5);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
       case(6): {
         printf("Shouter %d: %s\n", thread, shout6);
-        randomShout = randomNumber(upperShoutStrings, lowerShoutStrings);
+        randomShout = randomInteger(upperShoutStrings, lowerShoutStrings);
         break;
       }
     }
     shoutsDone++;
     waitsDone = 0;
-    waitGoal = randomNumber(upperBusyLoops, lowerBusyLoops);
+    waitGoal = randomInteger(upperBusyLoops, lowerBusyLoops);
   }
 }
 
 
+
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 3
-// IT INCLUDES FUNCTIONS <project2task1>
+// IT INCLUDES FUNCTIONS <diningPhilosophersBusyWaiting>
 //----------------------------------------------------------------------
 
-int maxInputSizeProject2 = 5;
-int maxIntegerSizeProject2 = 256;
+
+int philosophers, meals;
+int mealsEaten = 0;
+int maxInputSizeProject2 = 16;
+int maxIntegerSizeProject2 = 10000;
+int minPhilosophers = 2;
+int minMeals = 1;
+int randomInt;
+int sitting;
+int waitingToLeave;
+bool* chopstick;
 char* philospherRequestMessage = "\nPlease input the number of philosophers you would like.\n";
 char* mealsRequestMessage = "\nPlease input the number of meals you would like.\n";
-char* invalidInputMessage = "\nYou didn't input properly. Please input an integer greater than zero and less than 256.\n\n";
+char* invalidPhilosopherInputMessage = "\nYou didn't input properly. You need more than 1 philosopher, and less than 10,000 philosophers.\n\n";
+char* invalidInputMessage = "\nYou didn't input properly. Please input an integer greater than zero and less than 10,000.\n\n";
 
+void forkPhilosophers(int numPhilosophers) {
+  for (int i=0; i<numPhilosophers; i++) {
+    chopstick[i] = true;
+    sitting++;
+    printf("\nPhilosopher %d has entered the room.\n-Philosopher %d is waiting to sit.\n", i, i);
+    if (sitting==numPhilosophers) {
+      printf("All philosophers have sat down.\n");
+      Thread *t = new Thread("Philosopher Thread");
+      t->Fork(philosopher, i);
+    }
+  }
+}
 
-void project2task1() {
-  printf("You have selected task 3. Congrats.\n");
+void philosopher(int thread) {
+  if (mealsEaten==meals) {
+    printf("--------Philosopher %d is waiting to leave.\n", thread);
+    waitingToLeave++;
+    currentThread->Finish();
+  }
+  while (mealsEaten<meals) {
+    currentThread->Yield();
+    printf("--Philosopher %d is trying to pick up chopstick %d.\n", thread, thread);
+    while (!chopstick[thread]) {
+      currentThread->Yield();
+    }
+    chopstick[thread] = false;
+    printf("---Philosopher %d picked up chopstick [%d].\n", thread, thread);
+    printf("--Philosopher %d is trying to pick up chopstick [%d].\n", thread, ((thread+1)%philosophers));
+    while (!chopstick[((thread+1)%philosophers)]) {
+      currentThread->Yield();
+    }
+    chopstick[((thread+1)%philosophers)] = false;
+    printf("---Philosopher %d picked up chopstick [%d].\n", thread, ((thread+1)%philosophers));
+    if (mealsEaten<meals) {
+      mealsEaten++;
+      printf("----Philosopher %d begins to eat (%d meals have been eaten so far).\n", thread, mealsEaten);
+      randomInt = randomInteger(3,7);
+      busyWaitingLoop(randomInt);
+    }
+    chopstick[thread] = true;
+    printf("------Philosopher %d drops chopstick [%d].\n", thread, thread);
+    chopstick[((thread+1)%philosophers)] = true;
+    printf("------Philosopher %d drops chopstick [%d].\n", thread, ((thread+1)%philosophers));
+    printf("-------Philosopher %d is thinking.\n", thread);
+    randomInt = randomInteger(3,7);
+    busyWaitingLoop(randomInt);
+    if (mealsEaten==meals) {
+      printf("--------Philosopher %d is waiting to leave.\n", thread);
+      waitingToLeave++;
+      currentThread->Finish();
+    }
+  }
+}
+
+void diningPhilosophersBusyWaiting() {
+  printf("Dining Philosophers problem using busy waiting loops.\n");
+  sitting = 0;
+  waitingToLeave = 0;
   char* inputString;
-  int philosophers, meals;
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, philospherRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
   philosophers = atoi(inputString);
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, mealsRequestMessage, invalidInputMessage);
+  chopstick = new bool[philosophers];
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minMeals, mealsRequestMessage, invalidInputMessage);
   meals = atoi(inputString);
+
+  forkPhilosophers(philosophers);
+  currentThread->Finish();
 }
 
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 4
-// IT INCLUDES FUNCTIONS <project2task2>
+// IT INCLUDES FUNCTIONS <diningPhilosophersSemaphores>
 //----------------------------------------------------------------------
 
-void project2task2() {
+void diningPhilosophersSemaphores() {
   printf("You have selected task 4. Congrats.\n");
   char* inputString;
 
-  int philosophers, meals;
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, philospherRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minPhilosophers, philospherRequestMessage, invalidPhilosopherInputMessage);
   philosophers = atoi(inputString);
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, mealsRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, minMeals, mealsRequestMessage, invalidInputMessage);
   meals = atoi(inputString);
 }
 
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 5
-// IT INCLUDES FUNCTIONS <project2task3>
+// IT INCLUDES FUNCTIONS <postOfficeSimulator>
 //----------------------------------------------------------------------
 
-void project2task3() {
+void postOfficeSimulator() {
   printf("You have selected task 5. Congrats.\n");
 
   char* inputString;
@@ -411,22 +487,21 @@ void project2task3() {
   char* numMessagesRequestMessage = "\nPlease input the number of total messages: \n";
 
   int people, storage, numMessages;
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, peopleRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, peopleRequestMessage, invalidInputMessage);
   people = atoi(inputString);
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, storageRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, storageRequestMessage, invalidInputMessage);
   storage = atoi(inputString);
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, numMessagesRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, numMessagesRequestMessage, invalidInputMessage);
   numMessages = atoi(inputString);
-
 }
 
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 6
-// IT INCLUDES FUNCTIONS <project2task4>
+// IT INCLUDES FUNCTIONS <readersWritersProblem>
 //----------------------------------------------------------------------
 
-void project2task4() {
+void readersWritersProblem() {
   printf("You have selected task 6. Congrats.\n");
 
   char* inputString;
@@ -435,11 +510,11 @@ void project2task4() {
   char* maxReadersRequestMessage = "\nPlease input the maximum number of readers at a time: \n";
 
   int readers, writers, maxReaders;
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, readersRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, readersRequestMessage, invalidInputMessage);
   readers = atoi(inputString);
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, writersRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, writersRequestMessage, invalidInputMessage);
   writers = atoi(inputString);
-  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, maxReadersRequestMessage, invalidInputMessage);
+  inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, maxReadersRequestMessage, invalidInputMessage);
   maxReaders = atoi(inputString);
 
 }
