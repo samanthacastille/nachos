@@ -45,8 +45,12 @@ void philosopherSem(int);
 void forkPhilosophersSem(int);
 // Task 3
 void postOfficeSimulator();
+void Producers(int);
+void Consumer(int);
 // Task 4
 void readersWritersProblem();
+void Readers(int);
+void Writers(int);
 
 
 
@@ -563,6 +567,7 @@ void philosopherSem(int thread) {
       waitingToLeave++;
       if (waitingToLeave==(philosophers)) {
         printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
+        printf("\n***%d meals have been eaten.***\n\n\n", mealsEaten);
       }
       currentThread->Finish();
     }
@@ -574,6 +579,12 @@ void philosopherSem(int thread) {
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 5
 // IT INCLUDES FUNCTIONS <postOfficeSimulator>
 //----------------------------------------------------------------------
+
+#define N 5
+
+Semaphore *mutex = new Semaphore ("mutex to guard the buffer", 1);
+Semaphore *fullSpaces = new Semaphore ("semaphore to ensure there is at least one item in the buffer", 0);
+Semaphore *emptySpaces = new Semaphore ("semaphore to ensure there is at least free space in the buffer", N);
 
 void postOfficeSimulator() {
   printf("Post Office Simulator.\n");
@@ -590,6 +601,32 @@ void postOfficeSimulator() {
   storage = atoi(inputString);
   inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, numMessagesRequestMessage, invalidInputMessage);
   numMessages = atoi(inputString);
+
+
+}
+
+void Producers (int i) {
+  printf ("Producer %d is trying to enter the buffer area\n", i);
+  emptySpaces -> P();
+  printf ("Producer %d found an empty space\n", i);
+  currentThread->Yield();
+  mutex-> P();
+  printf ("Producer %d deposited an item into the buffer\n", i);
+  mutex-> V();
+  fullSpaces -> V();
+  printf ("Producer %d did a V operation on fullSpaces \n", i);
+}
+
+void Consumers (int i) {
+  printf ("Consumer %d is trying to enter the buffer area\n", i);
+  fullSpaces -> P();
+  printf ("Consumer %d found a full space space\n", i);
+  // currentThread->Yield();
+  mutex-> P();
+  printf ("Consumer %d consumed an item from the buffer\n", i);
+  mutex-> V();
+  emptySpaces -> V();
+  printf ("Producer %d did a V operation on emptySpaces \n", i);
 }
 
 
@@ -597,6 +634,10 @@ void postOfficeSimulator() {
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 6
 // IT INCLUDES FUNCTIONS <readersWritersProblem>
 //----------------------------------------------------------------------
+
+Semaphore *area = new Semaphore ("rw shared semaphore", 1);
+Semaphore *mutexRW;
+int readCount = 0;
 
 void readersWritersProblem() {
   printf("Readers writers problem.\n");
@@ -613,5 +654,36 @@ void readersWritersProblem() {
   writers = atoi(inputString);
   inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, maxReadersRequestMessage, invalidInputMessage);
   maxReaders = atoi(inputString);
+  mutexRW = new Semaphore ("mutexRW for readers", maxReaders);
+  for (int i=0; i<readers; i++) {
+    Thread *t = new Thread("Reader");
+    t->Fork(Readers, i);
+  }
+  for (int i=0; i<writers; i++) {
+    Thread *t = new Thread("Writer");
+    t->Fork(Writers, i);
+  }
+}
 
+void Readers(int i) {
+  printf ("Reader %d is trying to enter the buffer area\n", i);
+  mutexRW-> P();
+  readCount++;
+  if (readCount == 1) area-> P();
+  mutexRW-> V();
+  printf ("Reader %d is READING in the buffer area\n", i);
+  currentThread->Yield();
+  printf ("Reader %d is done reading and leaving the buffer area\n", i);
+  mutexRW-> P();
+  readCount--;
+  if (readCount == 0) area-> V();
+  mutexRW-> V();
+}
+
+void Writers(int i) {
+  printf ("Writer %d is trying to enter the buffer area\n", i);
+  area-> P();
+  printf ("Writer %d is writing in the buffer area\n", i);
+  printf ("Writer %d is done writing and leaving area\n", i);
+  area-> V();
 }
