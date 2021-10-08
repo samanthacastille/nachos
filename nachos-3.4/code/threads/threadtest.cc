@@ -46,11 +46,11 @@ void forkPhilosophersSem(int);
 // Task 3
 void postOfficeSimulator();
 void Producers(int);
-void Consumer(int);
+void Consumers(int);
 // Task 4
 void readersWritersProblem();
-void Readers(int);
-void Writers(int);
+void read(int);
+void write(int);
 
 
 
@@ -410,6 +410,7 @@ void diningPhilosophersBusyWaiting() {
   currentThread->Yield();
   if (waitingToLeave==(philosophers)) {
     printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
+    printf("\n***%d meals have been eaten.***\n\n\n", mealsEaten);
   }
   currentThread->Finish();
 }
@@ -440,12 +441,13 @@ void philosopherBWL(int thread) {
     waitingToLeave++;
     if (waitingToLeave==(philosophers)) {
       printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
+      printf("\n***%d meals have been eaten.***\n\n\n", mealsEaten);
     }
     currentThread->Finish();
   }
   while (mealsEaten<meals) {
     currentThread->Yield();
-    printf("--Philosopher %d is trying to pick up chopstick %d.\n", thread, thread);
+    printf("--Philosopher %d is trying to pick up chopstick [%d].\n", thread, thread);
     while (!chopstick[thread]) {
       currentThread->Yield();
     }
@@ -476,6 +478,7 @@ void philosopherBWL(int thread) {
       waitingToLeave++;
       if (waitingToLeave==(philosophers)) {
         printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
+        printf("\n***%d meals have been eaten.***\n\n\n", mealsEaten);
       }
       currentThread->Finish();
     }
@@ -485,7 +488,8 @@ void philosopherBWL(int thread) {
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 4
-// IT INCLUDES FUNCTIONS <diningPhilosophersSemaphores>
+// IT INCLUDES FUNCTIONS <diningPhilosophersSemaphores>,
+// <forkPhilosophersSem>, <philosopherSem>.
 //----------------------------------------------------------------------
 
 Semaphore **chopsticks;
@@ -509,6 +513,7 @@ void diningPhilosophersSemaphores() {
   currentThread->Yield();
   if (waitingToLeave==(philosophers)) {
     printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
+    printf("\n***%d meals have been eaten.***\n\n\n", mealsEaten);
   }
   currentThread->Finish();
 }
@@ -538,11 +543,12 @@ void philosopherSem(int thread) {
     waitingToLeave++;
     if (waitingToLeave==(philosophers)) {
       printf("\n\n***All philosophers are done eating, and they all leave the table together.***\n\n\n");
+      printf("\n***%d meals have been eaten.***\n\n\n", mealsEaten);
     }
     currentThread->Finish();
   }
   while (mealsEaten<meals) {
-    printf("--Philosopher %d is trying to pick up chopstick %d.\n", thread, thread);
+    printf("--Philosopher %d is trying to pick up chopstick [%d].\n", thread, thread);
     chopsticks[thread]->P();
     printf("---Philosopher %d picked up chopstick [%d].\n", thread, thread);
     printf("--Philosopher %d is trying to pick up chopstick [%d].\n", thread, ((thread+1)%philosophers));
@@ -577,7 +583,7 @@ void philosopherSem(int thread) {
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 5
-// IT INCLUDES FUNCTIONS <postOfficeSimulator>
+// IT INCLUDES FUNCTIONS <postOfficeSimulator>, <producers>, <consumers>
 //----------------------------------------------------------------------
 
 #define N 5
@@ -602,10 +608,19 @@ void postOfficeSimulator() {
   inputString = getInput(true, maxInputSizeProject2, maxIntegerSizeProject2, 1, numMessagesRequestMessage, invalidInputMessage);
   numMessages = atoi(inputString);
 
+  for (int i=0; i<people; i++) {
+    Thread *t = new Thread("Producers thread");
+    t->Fork(Producers, i);
+  }
+
+  for (int i=0; i<people; i++) {
+    Thread *t = new Thread("Consumers thread");
+    t->Fork(Consumers, i);
+  }
 
 }
 
-void Producers (int i) {
+void Producers(int i) {
   printf ("Producer %d is trying to enter the buffer area\n", i);
   emptySpaces -> P();
   printf ("Producer %d found an empty space\n", i);
@@ -617,7 +632,7 @@ void Producers (int i) {
   printf ("Producer %d did a V operation on fullSpaces \n", i);
 }
 
-void Consumers (int i) {
+void Consumers(int i) {
   printf ("Consumer %d is trying to enter the buffer area\n", i);
   fullSpaces -> P();
   printf ("Consumer %d found a full space space\n", i);
@@ -632,7 +647,7 @@ void Consumers (int i) {
 
 //----------------------------------------------------------------------
 // THIS IS THE START OF SAMANTHA CASTILLE'S CODE FOR TASK 6
-// IT INCLUDES FUNCTIONS <readersWritersProblem>
+// IT INCLUDES FUNCTIONS <readersWritersProblem>, <read>, <write>.
 //----------------------------------------------------------------------
 
 Semaphore *area = new Semaphore ("rw shared semaphore", 1);
@@ -657,21 +672,21 @@ void readersWritersProblem() {
   mutexRW = new Semaphore ("mutexRW for readers", maxReaders);
   for (int i=0; i<readers; i++) {
     Thread *t = new Thread("Reader");
-    t->Fork(Readers, i);
+    t->Fork(read, i);
   }
   for (int i=0; i<writers; i++) {
     Thread *t = new Thread("Writer");
-    t->Fork(Writers, i);
+    t->Fork(write, i);
   }
 }
 
-void Readers(int i) {
+void read(int i) {
   printf ("Reader %d is trying to enter the buffer area\n", i);
   mutexRW-> P();
   readCount++;
   if (readCount == 1) area-> P();
   mutexRW-> V();
-  printf ("Reader %d is READING in the buffer area\n", i);
+  printf ("----Reader %d is READING in the buffer area\n", i);
   currentThread->Yield();
   printf ("Reader %d is done reading and leaving the buffer area\n", i);
   mutexRW-> P();
@@ -680,10 +695,10 @@ void Readers(int i) {
   mutexRW-> V();
 }
 
-void Writers(int i) {
+void write(int i) {
   printf ("Writer %d is trying to enter the buffer area\n", i);
   area-> P();
-  printf ("Writer %d is writing in the buffer area\n", i);
+  printf ("-----Writer %d is writing in the buffer area\n", i);
   printf ("Writer %d is done writing and leaving area\n", i);
   area-> V();
 }
