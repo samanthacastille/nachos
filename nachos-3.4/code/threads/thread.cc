@@ -7,11 +7,11 @@
 //	Finish -- called when the forked procedure finishes, to clean up
 //	Yield -- relinquish control over the CPU to another ready thread
 //	Sleep -- relinquish control over the CPU, but thread is now blocked.
-//		In other words, it will not run again, until explicitly
+//		In other words, it will not run again, until explicitly 
 //		put back on the ready queue.
 //
-// Copyright (c) 1992-1993,2021 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation
+// Copyright (c) 1992-1993 The Regents of the University of California.
+// All rights reserved.  See copyright.h for copyright notice and limitation 
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
@@ -21,7 +21,7 @@
 #include "system.h"
 
 #define STACK_FENCEPOST 0xdeadbeef	// this is put at the top of the
-					// execution stack, for detecting
+					// execution stack, for detecting 
 					// stack overflows
 
 //----------------------------------------------------------------------
@@ -40,6 +40,10 @@ Thread::Thread(char* threadName)
     status = JUST_CREATED;
 #ifdef USER_PROGRAM
     space = NULL;
+	parent = NULL;
+	ID = 0;
+	killNewChild = false;
+	isJoined = false;
 #endif
 }
 
@@ -57,7 +61,7 @@ Thread::Thread(char* threadName)
 
 Thread::~Thread()
 {
-    DEBUG('t', "Deleting thread \"%s\"\n", name);
+    //DEBUG('t', "Deleting thread \"%i\"\n", ID);
 
     ASSERT(this != currentThread);
     if (stack != NULL)
@@ -66,7 +70,7 @@ Thread::~Thread()
 
 //----------------------------------------------------------------------
 // Thread::Fork
-// 	Invoke (*func)(arg), allowing caller and callee to execute
+// 	Invoke (*func)(arg), allowing caller and callee to execute 
 //	concurrently.
 //
 //	NOTE: although our definition allows only a single integer argument
@@ -79,24 +83,23 @@ Thread::~Thread()
 //		2. Initialize the stack so that a call to SWITCH will
 //		cause it to run the procedure
 //		3. Put the thread on the ready queue
-//
+// 	
 //	"func" is the procedure to run concurrently.
 //	"arg" is a single argument to be passed to the procedure.
 //----------------------------------------------------------------------
 
-void
+void 
 Thread::Fork(VoidFunctionPtr func, int arg)
 {
-    DEBUG('t', "Forking thread \"%s\" with func = 0x%x, arg = %d\n",
-	  name, (int) func, arg);
-
+    //DEBUG('t', "Forking thread \"%i\" with func = 0x%x, arg = %d\n", ID, (int) func, arg);
+    
     StackAllocate(func, arg);
 
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-    scheduler->ReadyToRun(this);	// ReadyToRun assumes that interrupts
+    scheduler->ReadyToRun(this);	// ReadyToRun assumes that interrupts 
 					// are disabled!
     (void) interrupt->SetLevel(oldLevel);
-}
+}    
 
 //----------------------------------------------------------------------
 // Thread::CheckOverflow
@@ -120,22 +123,22 @@ Thread::CheckOverflow()
 #ifdef HOST_SNAKE			// Stacks grow upward on the Snakes
 	ASSERT(stack[StackSize - 1] == STACK_FENCEPOST);
 #else
-	ASSERT((int) *stack == (int) STACK_FENCEPOST);
+	ASSERT(*stack == STACK_FENCEPOST);
 #endif
 }
 
 //----------------------------------------------------------------------
 // Thread::Finish
-// 	Called by ThreadRoot when a thread is done executing the
+// 	Called by ThreadRoot when a thread is done executing the 
 //	forked procedure.
 //
-// 	NOTE: we don't immediately de-allocate the thread data structure
-//	or the execution stack, because we're still running in the thread
-//	and we're still on the stack!  Instead, we set "threadToBeDestroyed",
+// 	NOTE: we don't immediately de-allocate the thread data structure 
+//	or the execution stack, because we're still running in the thread 
+//	and we're still on the stack!  Instead, we set "threadToBeDestroyed", 
 //	so that Scheduler::Run() will call the destructor, once we're
 //	running in the context of a different thread.
 //
-// 	NOTE: we disable interrupts, so that we don't get a time slice
+// 	NOTE: we disable interrupts, so that we don't get a time slice 
 //	between setting threadToBeDestroyed, and going to sleep.
 //----------------------------------------------------------------------
 
@@ -143,12 +146,28 @@ Thread::CheckOverflow()
 void
 Thread::Finish ()
 {
-    (void) interrupt->SetLevel(IntOff);
+    (void) interrupt->SetLevel(IntOff);		
     ASSERT(this == currentThread);
-
-    DEBUG('t', "Finishing thread \"%s\"\n", getName());
-
+    
+    //DEBUG('t', "Finishing thread \"%i\"\n", getID());
+    
     threadToBeDestroyed = currentThread;
+#ifdef USER_PROGRAM
+	if(parent != NULL)	// Wake up the joined parent, if it exists.
+	{
+		//printf("Waking up thread %i\n", currentThread->getParent()->getID());
+		scheduler->WakeUpFromJoin(parent);
+	}
+
+	Thread * tempThread = new Thread("bleh!");
+	tempThread->setID(-1);
+	for (int i = 0; i < activeThreads->getSize(); i++)
+	{
+		tempThread = (Thread*)activeThreads->Remove();
+		if(tempThread != currentThread)
+			activeThreads->Append(tempThread);
+	}
+#endif
     Sleep();					// invokes SWITCH
     // not reached
 }
@@ -166,7 +185,7 @@ Thread::Finish ()
 //	NOTE: we disable interrupts, so that looking at the thread
 //	on the front of the ready list, and switching to it, can be done
 //	atomically.  On return, we re-set the interrupt level to its
-//	original state, in case we are called with interrupts disabled.
+//	original state, in case we are called with interrupts disabled. 
 //
 // 	Similar to Thread::Sleep(), but a little different.
 //----------------------------------------------------------------------
@@ -176,13 +195,15 @@ Thread::Yield ()
 {
     Thread *nextThread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-
+    
     ASSERT(this == currentThread);
-
-    DEBUG('t', "Yielding thread \"%s\"\n", getName());
-
+	//printf("CONTEXT SWITCH: Yielding Thread %i to ",getID());
+    
+    //DEBUG('t', "Yielding thread \"%i\"\n", getID());
+    
     nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL) {
+	//printf("%i.\n",nextThread->getID());
 	scheduler->ReadyToRun(this);
 	scheduler->Run(nextThread);
     }
@@ -204,7 +225,7 @@ Thread::Yield ()
 //
 //	NOTE: we assume interrupts are already disabled, because it
 //	is called from the synchronization routines which must
-//	disable interrupts for atomicity.   We need interrupts off
+//	disable interrupts for atomicity.   We need interrupts off 
 //	so that there can't be a time slice between pulling the first thread
 //	off the ready list, and switching to it.
 //----------------------------------------------------------------------
@@ -212,11 +233,11 @@ void
 Thread::Sleep ()
 {
     Thread *nextThread;
-
+	
     ASSERT(this == currentThread);
     ASSERT(interrupt->getLevel() == IntOff);
-
-    DEBUG('t', "Sleeping thread \"%s\"\n", getName());
+    
+    //DEBUG('t', "Sleeping thread \"%i\"\n", getID());
 
     status = BLOCKED;
     while ((nextThread = scheduler->FindNextToRun()) == NULL)
@@ -229,7 +250,7 @@ Thread::Sleep ()
 // ThreadFinish, InterruptEnable, ThreadPrint
 //	Dummy functions because C++ does not allow a pointer to a member
 //	function.  So in order to do this, we create a dummy C function
-//	(which we can pass a pointer to), that then simply calls the
+//	(which we can pass a pointer to), that then simply calls the 
 //	member function.
 //----------------------------------------------------------------------
 
@@ -275,7 +296,7 @@ Thread::StackAllocate (VoidFunctionPtr func, int arg)
 #endif  // HOST_SPARC
     *stack = STACK_FENCEPOST;
 #endif  // HOST_SNAKE
-
+    
     machineState[PCState] = (int) ThreadRoot;
     machineState[StartupPCState] = (int) InterruptEnable;
     machineState[InitialPCState] = (int) func;
@@ -285,13 +306,14 @@ Thread::StackAllocate (VoidFunctionPtr func, int arg)
 
 #ifdef USER_PROGRAM
 #include "machine.h"
+#include "list.h"
 
 //----------------------------------------------------------------------
 // Thread::SaveUserState
 //	Save the CPU state of a user program on a context switch.
 //
-//	Note that a user program thread has *two* sets of CPU registers --
-//	one for its state while executing user code, one for its state
+//	Note that a user program thread has *two* sets of CPU registers -- 
+//	one for its state while executing user code, one for its state 
 //	while executing kernel code.  This routine saves the former.
 //----------------------------------------------------------------------
 
@@ -306,8 +328,8 @@ Thread::SaveUserState()
 // Thread::RestoreUserState
 //	Restore the CPU state of a user program on a context switch.
 //
-//	Note that a user program thread has *two* sets of CPU registers --
-//	one for its state while executing user code, one for its state
+//	Note that a user program thread has *two* sets of CPU registers -- 
+//	one for its state while executing user code, one for its state 
 //	while executing kernel code.  This routine restores the former.
 //----------------------------------------------------------------------
 
@@ -317,4 +339,10 @@ Thread::RestoreUserState()
     for (int i = 0; i < NumTotalRegs; i++)
 	machine->WriteRegister(i, userRegisters[i]);
 }
+
+void Thread::setID(int newID) {ID = newID;}	// Set a new ID.
+int Thread::getID() {return ID;}	// Return the ID.
+Thread* Thread::getParent() {return parent;}	// Return the parent.
+void Thread::setParent(Thread * newParent) {parent = newParent;}	// Set a new parent.
+
 #endif

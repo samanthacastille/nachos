@@ -1,8 +1,8 @@
-// system.cc
+// system.cc 
 //	Nachos initialization and cleanup routines.
 //
-// Copyright (c) 1992-1993,2021 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation
+// Copyright (c) 1992-1993 The Regents of the University of California.
+// All rights reserved.  See copyright.h for copyright notice and limitation 
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
@@ -18,17 +18,19 @@ Interrupt *interrupt;			// interrupt status
 Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
-
+int threadChoice;
 #ifdef FILESYS_NEEDED
 FileSystem  *fileSystem;
 #endif
 
-#ifdef FILESYS
-SynchDisk   *synchDisk;
+#ifdef USER_PROGRAM
+Machine *machine;	// user program memory and registers
+List* activeThreads;
+int threadID;
 #endif
 
-#ifdef USER_PROGRAM	// requires either FILESYS or FILESYS_STUB
-Machine *machine;	// user program memory and registers
+#ifdef FILESYS
+SynchDisk   *synchDisk;
 #endif
 
 #ifdef NETWORK
@@ -50,8 +52,8 @@ extern void Cleanup();
 //	Note that instead of calling Yield() directly (which would
 //	suspend the interrupt handler, not the interrupted thread
 //	which is what we wanted to context switch), we set a flag
-//	so that once the interrupt handler is done, it will appear as
-//	if the interrupted thread called Yield at the point it is
+//	so that once the interrupt handler is done, it will appear as 
+//	if the interrupted thread called Yield at the point it is 
 //	was interrupted.
 //
 //	"dummy" is because every interrupt handler takes one argument,
@@ -67,10 +69,10 @@ TimerInterruptHandler(int dummy)
 //----------------------------------------------------------------------
 // Initialize
 // 	Initialize Nachos global data structures.  Interpret command
-//	line arguments in order to determine flags for the initialization.
-//
+//	line arguments in order to determine flags for the initialization.  
+// 
 //	"argc" is the number of command line arguments (including the name
-//		of the command) -- ex: "nachos -d +" -> argc = 3
+//		of the command) -- ex: "nachos -d +" -> argc = 3 
 //	"argv" is an array of strings, one for each command line argument
 //		ex: "nachos -d +" -> argv = {"nachos", "-d", "+"}
 //----------------------------------------------------------------------
@@ -91,7 +93,7 @@ Initialize(int argc, char **argv)
     double rely = 1;		// network reliability
     int netname = 0;		// UNIX socket name
 #endif
-
+    
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
 	argCount = 1;
 	if (!strcmp(*argv, "-d")) {
@@ -107,35 +109,13 @@ Initialize(int argc, char **argv)
 						// number generator
 	    randomYield = TRUE;
 	    argCount = 2;
-	}
-
-
-// Samantha Castille
-// Task 3 code
-#ifdef THREADS
-if (!strcmp(*argv, "-A")) {
-  if (*(argv+1) != '\0') {
-    if ((*(*(argv+1)+1))=='\0') {
-      taskFlag = atoi(*(argv+1));
-      if ((taskFlag==1) || (taskFlag==2) || (taskFlag==3) || (taskFlag==4) || (taskFlag==5) || (taskFlag==6)) {
-        continue;
-      } else {
-        taskFlag = -1;
-      }
-    } else {
-      printf("You have to input a task number (1/2).\n");
-    }
-  argCount = 2;
-  } else {
-    printf("You have to input a task number (1/2).\n");
-    taskFlag = -1;
-    argCount = 1;
-  }
-}
-#endif
-// End task 3 code
-
-
+	} else if (!strcmp(*argv, "-A")) {
+	    if(*(argv+1) == NULL)
+			threadChoice = -1;
+	    else
+			threadChoice = atoi(*(argv+1));
+	    argCount = 2;
+	} 
 #ifdef USER_PROGRAM
 	if (!strcmp(*argv, "-s"))
 	    debugUserProg = TRUE;
@@ -165,20 +145,25 @@ if (!strcmp(*argv, "-A")) {
 	timer = new Timer(TimerInterruptHandler, 0, randomYield);
 
     threadToBeDestroyed = NULL;
+	
+	
 
     // We didn't explicitly allocate the current thread we are running in.
     // But if it ever tries to give up the CPU, we better have a Thread
-    // object to save its state.
-    currentThread = new Thread("main");
+    // object to save its state. 
+    currentThread = new Thread("main");		
     currentThread->setStatus(RUNNING);
 
     interrupt->Enable();
     CallOnUserAbort(Cleanup);			// if user hits ctl-C
-
+	
 #ifdef USER_PROGRAM
-    machine = new Machine(debugUserProg);	// this must come first
-#endif
+	machine = new Machine(debugUserProg);
 
+
+	activeThreads = new List();	// Make the active threads list.
+	threadID = 1; // Initialize our total number of active threads.
+#endif
 #ifdef FILESYS
     synchDisk = new SynchDisk("DISK");
 #endif
@@ -203,9 +188,10 @@ Cleanup()
 #ifdef NETWORK
     delete postOffice;
 #endif
-
+    
 #ifdef USER_PROGRAM
     delete machine;
+	delete activeThreads;
 #endif
 
 #ifdef FILESYS_NEEDED
@@ -215,10 +201,11 @@ Cleanup()
 #ifdef FILESYS
     delete synchDisk;
 #endif
-
+    
     delete timer;
     delete scheduler;
     delete interrupt;
-
+    
     Exit(0);
 }
+
