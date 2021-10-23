@@ -127,23 +127,25 @@ Initialize(int argc, char **argv)
   if (!strcmp(*argv, "-V")) {
     if (*(argv+1) != '\0') {
       if ((*(*(argv+1)+1))=='\0') {
-        taskFlag = atoi(*(argv+1));
-        if ((taskFlag==0) || (taskFlag==1) || (taskFlag==2)) {
+        memoryManagementType = atoi(*(argv+1));
+        if ((memoryManagementType==0) || (memoryManagementType==1) || (memoryManagementType==2)) {
           continue;
         } else {
-          taskFlag = -1;
+          memoryManagementType = 0;
         }
       } else {
-        printf("Choose the type of memory management to use with -V and a task number (0/1/2).\n");
+        printf("Next time choose the type of memory management to use with -V and a task number (0/1/2).\n");
+        printf("Defaulted to option [0] - demand paging.\n");
       }
     argCount = 2;
     } else {
-      printf("Choose the type of memory management to use with -V and a task number (0/1/2).\n");
-      taskFlag = -1;
+      printf("Next time choose the type of memory management to use with -V and a task number (0/1/2).\n");
+      printf("Defaulted to option [0] - demand paging.\n");
+      memoryManagementType = 0;
       argCount = 1;
     }
   } else {
-    taskFlag = 0;
+    memoryManagementType = 0;
   }
 #endif
 // end code for task 5
