@@ -131,20 +131,25 @@ Initialize(int argc, char **argv)
         if ((memoryManagementType==0) || (memoryManagementType==1) || (memoryManagementType==2)) {
           continue;
         } else {
+          printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
+          printf("Defaulted to option [0] - demand paging.\n");
           memoryManagementType = 0;
         }
       } else {
-        printf("Next time choose the type of memory management to use with -V and a task number (0/1/2).\n");
+        printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
         printf("Defaulted to option [0] - demand paging.\n");
+        memoryManagementType = 0;
       }
     argCount = 2;
     } else {
-      printf("Next time choose the type of memory management to use with -V and a task number (0/1/2).\n");
+      printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
       printf("Defaulted to option [0] - demand paging.\n");
       memoryManagementType = 0;
       argCount = 1;
     }
   } else {
+    printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
+    printf("Defaulted to option [0] - demand paging.\n");
     memoryManagementType = 0;
   }
 #endif
