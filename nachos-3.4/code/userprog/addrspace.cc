@@ -104,7 +104,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
 	int freePhysicalPage = memoryBitMap->Find();
-	pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
+	pageTable[i].virtualPage = i;
 	pageTable[i].physicalPage = freePhysicalPage;
 	pageTable[i].valid = TRUE;
 	pageTable[i].use = FALSE;
@@ -113,7 +113,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 					// a separate page, we could set its
 					// pages to be read-only
 
-	bzero(machine->mainMemory[freePhysicalPage], PageSize);
+	bzero(&(machine->mainMemory[freePhysicalPage]), PageSize);
 
 	DEBUG('a', "Initializing page, at 0x%x, size %d\n",
 		i*PageSize, PageSize);
