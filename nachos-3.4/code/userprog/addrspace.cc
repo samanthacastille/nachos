@@ -113,11 +113,14 @@ AddrSpace::AddrSpace(OpenFile *executable)
 					// a separate page, we could set its
 					// pages to be read-only
 
+	bzero(machine->mainMemory[freePhysicalPage], PageSize);
+
 	DEBUG('a', "Initializing page, at 0x%x, size %d\n",
 		i*PageSize, PageSize);
 	executable->ReadAt(&(machine->mainMemory[freePhysicalPage*PageSize]),
 		PageSize, i*PageSize);
     }
+// end code by Samantha Castille
 
 // zero out the entire address space, to zero the unitialized data segment
 // and the stack segment

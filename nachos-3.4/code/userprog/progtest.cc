@@ -27,11 +27,13 @@ StartProcess(char *filename)
 
     AddrSpace *space;
 
+// code by Samantha Castille
     if (executable == NULL) {
 	printf("Unable to open file %s\n", filename);
   printf("\nExiting ----------------->\n");
   currentThread->Finish();
     }
+// end code by Samantha Castille
 
     space = new AddrSpace(executable);
     currentThread->space = space;
