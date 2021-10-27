@@ -77,7 +77,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 						// to leave room for the stack
 
 
-// cody changes by Samantha Castille
+// code changes by Samantha Castille
 		BitMap *memoryBitMap = new BitMap(NumPhysPages);
 
     numPages = divRoundUp(size, PageSize);
@@ -123,6 +123,8 @@ AddrSpace::AddrSpace(OpenFile *executable)
 	printf("bitmap AFTER allocation\n");
 	memoryBitMap->Print();
 
+	// end code by Samantha Castille
+
 	// Zero ONLY the memory allocated for prog from bitmap
 	bzero(&(machine->mainMemory[start_physicalPageIndex]), numPages*PageSize);
 
@@ -133,7 +135,6 @@ AddrSpace::AddrSpace(OpenFile *executable)
 	if (noffH.initData.size > 0)
 		executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr + start_physicalPageIndex * PageSize]),
 							noffH.initData.size, noffH.initData.inFileAddr);
-// end code by Samantha Castille
 }
 
 //----------------------------------------------------------------------

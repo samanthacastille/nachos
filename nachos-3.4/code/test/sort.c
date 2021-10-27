@@ -11,7 +11,7 @@
 
 // edited to run and debug faster
 
-int A[10];	/* size of physical memory; with code, we'll run out of space!*/
+int A[10];	
 
 int
 main()
