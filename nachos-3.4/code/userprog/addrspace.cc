@@ -83,65 +83,57 @@ AddrSpace::AddrSpace(OpenFile *executable)
     numPages = divRoundUp(size, PageSize);
     size = numPages * PageSize;
 
+	printf("bitmap BEFORE allocation\n");
+	memoryBitMap->Print();
     if (numPages > NumPhysPages) {
-			printf("\nThis program is too large to run until we have virtual memory.\n");
-			printf("\nExiting ----------------->\n");
-			currentThread->Finish();
-		}		// check we're not trying
-						// to run anything too big --
-						// at least until we have
-						// virtual memory
+		printf("\nThis program is too large to run until we have virtual memory.\n");
+		printf("\nExiting ----------------->\n");
+		currentThread->Finish();
+	}		// check we're not trying
+					// to run anything too big --
+					// at least until we have
+					// virtual memory
 
-		if (numPages > memoryBitMap->NumClear()) {
-			printf("\nThere isn't enough room left in physical memory for this program.\n");
-			printf("\nExiting ----------------->\n");
-			currentThread->Finish();
-		}
+	if (numPages > memoryBitMap->NumClear()) {
+		printf("\nThere isn't enough room left in physical memory for this program.\n");
+		printf("\nExiting ----------------->\n");
+		currentThread->Finish();
+	}
 
     DEBUG('a', "Initializing address space, num pages %d, size %d\n",
 					numPages, size);
 // first, set up the translation
     pageTable = new TranslationEntry[numPages];
+	int start_physicalPageIndex;
     for (i = 0; i < numPages; i++) {
-	int freePhysicalPage = memoryBitMap->Find();
-	pageTable[i].virtualPage = i;
-	pageTable[i].physicalPage = freePhysicalPage;
-	pageTable[i].valid = TRUE;
-	pageTable[i].use = FALSE;
-	pageTable[i].dirty = FALSE;
-	pageTable[i].readOnly = FALSE;  // if the code segment was entirely on
-					// a separate page, we could set its
-					// pages to be read-only
+		int freePhysicalPage = memoryBitMap->Find();
+		if(!i) start_physicalPageIndex=freePhysicalPage;
+		pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
+		pageTable[i].physicalPage = freePhysicalPage;
+		pageTable[i].valid = TRUE;
+		pageTable[i].use = FALSE;
+		pageTable[i].dirty = FALSE;
+		pageTable[i].readOnly = FALSE;  // if the code segment was entirely on
+						// a separate page, we could set its
+						// pages to be read-only
 
-	bzero(&(machine->mainMemory[freePhysicalPage]), PageSize);
+		DEBUG('a', "Initializing page, at 0x%x, size %d\n",
+			i*PageSize, PageSize);
+	}
+	printf("bitmap AFTER allocation\n");
+	memoryBitMap->Print();
 
-	DEBUG('a', "Initializing page, at 0x%x, size %d\n",
-		i*PageSize, PageSize);
-	executable->ReadAt(&(machine->mainMemory[freePhysicalPage*PageSize]),
-		PageSize, i*PageSize);
-    }
+	// Zero ONLY the memory allocated for prog from bitmap
+	bzero(&(machine->mainMemory[start_physicalPageIndex]), numPages*PageSize);
+
+	// then, copy in the code and data segments into memory
+	if (noffH.code.size)
+		executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr + start_physicalPageIndex * PageSize]),
+							noffH.code.size, noffH.code.inFileAddr);
+	if (noffH.initData.size > 0)
+		executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr + start_physicalPageIndex * PageSize]),
+							noffH.initData.size, noffH.initData.inFileAddr);
 // end code by Samantha Castille
-
-// zero out the entire address space, to zero the unitialized data segment
-// and the stack segment
-//    bzero(machine->mainMemory, size);
-
-// then, copy in the code and data segments into memory
-/*
-    if (noffH.code.size > 0) {
-        DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",
-			noffH.code.virtualAddr, noffH.code.size);
-        executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
-			noffH.code.size, noffH.code.inFileAddr);
-    }
-    if (noffH.initData.size > 0) {
-        DEBUG('a', "Initializing data segment, at 0x%x, size %d\n",
-			noffH.initData.virtualAddr, noffH.initData.size);
-        executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
-			noffH.initData.size, noffH.initData.inFileAddr);
-    }
-*/
-
 }
 
 //----------------------------------------------------------------------
