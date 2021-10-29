@@ -122,9 +122,9 @@ AddrSpace::AddrSpace(OpenFile *executable)
 	}
 	printf("bitmap AFTER allocation\n");
 	memoryBitMap->Print();
-
 	// end code by Samantha Castille
 
+	// help from David Cain
 	// Zero ONLY the memory allocated for prog from bitmap
 	bzero(&(machine->mainMemory[start_physicalPageIndex]), numPages*PageSize);
 

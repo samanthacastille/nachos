@@ -1,11 +1,11 @@
 #include "syscall.h"
-// code by Samantha Castille
 
 int main() {
-  Write("\nSort 1\n", 10, ConsoleOutput);
-  Exec("../test/sort");
-  Write("\nSort 2\n", 10, ConsoleOutput);
-  Exec("../test/sort");
-  Write("\nSort 3:\n", 10, ConsoleOutput);
-  Exec("../test/sort");
+  Write("\nExec adder 1\n", 20, ConsoleOutput);
+  Exec("../test/adder");
+  Write("\nExec adder 2\n", 20, ConsoleOutput);
+  Exec("../test/adder");
+  Yield();
+  Write("\nExec adder 3\n", 20, ConsoleOutput);
+  Exec("../test/adder");
 }

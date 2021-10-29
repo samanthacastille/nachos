@@ -92,13 +92,16 @@ main(int argc, char **argv)
         if (!strcmp(*argv, "-z"))               // print copyright
             printf (copyright);
 #ifdef USER_PROGRAM
+// changes by Samantha Castille
         if (!strcmp(*argv, "-x")) {        	// run a user program
 	    if (argc > 1) {
         StartProcess(*(argv + 1));
       } else {
-        printf("I'm here");
+        printf("\nPlease enter a user program to run next time.\n\n");
                 argCount = 2;
       }
+// end changes by Samantha Castille
+
         } else if (!strcmp(*argv, "-c")) {      // test the console
 	    if (argc == 1)
 	        ConsoleTest(NULL, NULL);
