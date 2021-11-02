@@ -298,6 +298,8 @@ ExceptionHandler(ExceptionType which)
 		printf("%d \n", badVAddr);
 		printf("%d \n", badVPage);
 	//	currentThread->Finish();
+
+	// copy the memory allocation code from addrspace and change to storing one page instead of whole program
 		break;
 // end code changes by James Thierry
 
