@@ -243,6 +243,9 @@ ExceptionHandler(ExceptionType which)
 			}
 			case SC_Exit :	// Exit a process.
 			{
+				// we need to clear the bitmap and then delete the address spaces
+
+
 				printf("SYSTEM CALL: Exit, called by thread %i.\n",currentThread->getID());
 				if(arg1 == 0)	// Did we exit properly?  If not, show an error message.
 					printf("Process %i exited normally!\n", currentThread->getID());
@@ -282,6 +285,8 @@ ExceptionHandler(ExceptionType which)
 			delete currentThread->space;
 		currentThread->Finish();	// Delete the thread.
 		break;
+
+	// code changes by James Thierry
 	case PageFaultException :
 		printf("Page Fault Here \n");
 		stats->numPageFaults++;
@@ -292,8 +297,10 @@ ExceptionHandler(ExceptionType which)
 		printf("%d \n", stats->numPageFaults);
 		printf("%d \n", badVAddr);
 		printf("%d \n", badVPage);
-		currentThread->Finish();
+	//	currentThread->Finish();
 		break;
+// end code changes by James Thierry
+
 	case BusErrorException :
 		printf("ERROR: BusErrorException, called by thread %i.\n",currentThread->getID());
 		if (currentThread->getName() == "main")
