@@ -71,8 +71,6 @@ AddrSpace::AddrSpace(OpenFile *executable)
 		SwapHeader(&noffH);
 	}
 
-	// *IMPORTANT* You need to replace asserts with error handling code. 
-	// ASSERT(noffH.noffMagic == NOFFMAGIC); 
 	if (noffH.noffMagic == NOFFMAGIC)
 	{
 
@@ -81,22 +79,16 @@ AddrSpace::AddrSpace(OpenFile *executable)
 				+ UserStackSize;	// we need to increase the size
 							// to leave room for the stack
 
-	// code changes by Samantha Castille
-		// BitMap *memoryBitMap = new BitMap(NumPhysPages);
-		// This should not be here, it should be a global
-
 		numPages = divRoundUp(size, PageSize);
 		size = numPages * PageSize;
 
+// code changes by Samantha Castille
 		printf("bitmap BEFORE allocation\n");
 		memoryBitMap->Print();
 		if (numPages > NumPhysPages) {
 			printf("\nThis program is too large to run until we have virtual memory.\n");
 			printf("\nExiting ----------------->\n");
 			currentThread->killNewChild = true;
-			
-			// currentThread->Finish();
-			// Calling finish will kill the parent thread
 			return;
 		}		// check we're not trying
 						// to run anything too big --
@@ -106,9 +98,6 @@ AddrSpace::AddrSpace(OpenFile *executable)
 			printf("\nThere isn't enough room left in physical memory for this program.\n");
 			printf("\nExiting ----------------->\n");
 			currentThread->killNewChild = true;
-
-			// currentThread->Finish();
-			// Calling finish will kill the parent thread
 			return;
 		}
 
