@@ -111,7 +111,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 			if(!i) start_physicalPageIndex=freePhysicalPage;
 			pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
 			pageTable[i].physicalPage = freePhysicalPage;
-			pageTable[i].valid = TRUE;
+			pageTable[i].valid = FALSE;
 			pageTable[i].use = FALSE;
 			pageTable[i].dirty = FALSE;
 			pageTable[i].readOnly = FALSE;  // if the code segment was entirely on
@@ -130,19 +130,21 @@ AddrSpace::AddrSpace(OpenFile *executable)
 		bzero(machine->mainMemory + start_physicalPageIndex * PageSize, numPages*PageSize);
 
 		// then, copy in the code and data segments into memory
-		if (noffH.code.size){
-			executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr + start_physicalPageIndex * PageSize]),
-								noffH.code.size, noffH.code.inFileAddr);
-		}
-		if (noffH.initData.size > 0){
-			executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr + start_physicalPageIndex * PageSize]),
-								noffH.initData.size, noffH.initData.inFileAddr);
-		}
-	}
-	else
-	{
-		printf("Error: Not a valid application\n");
-	}
+	// 	/*if (noffH.code.size){
+	// 		executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr + start_physicalPageIndex * PageSize]),
+	// 							noffH.code.size, noffH.code.inFileAddr);
+	// 	}
+	// 	if (noffH.initData.size > 0){
+	// 		executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr + start_physicalPageIndex * PageSize]),
+	// 							noffH.initData.size, noffH.initData.inFileAddr);
+	// 	}
+	// }
+	// else
+	// {
+	// 	printf("Error: Not a valid application\n");
+	// }*/
+
+}
 }
 
 //----------------------------------------------------------------------
