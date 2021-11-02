@@ -65,76 +65,95 @@ AddrSpace::AddrSpace(OpenFile *executable)
     NoffHeader noffH;
     unsigned int i, size;
 
-    executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
-    if ((noffH.noffMagic != NOFFMAGIC) &&
-		(WordToHost(noffH.noffMagic) == NOFFMAGIC))
-    	SwapHeader(&noffH);
-    ASSERT(noffH.noffMagic == NOFFMAGIC);
-
-// how big is address space?
-    size = noffH.code.size + noffH.initData.size + noffH.uninitData.size
-			+ UserStackSize;	// we need to increase the size
-						// to leave room for the stack
-
-
-// code changes by Samantha Castille
-		BitMap *memoryBitMap = new BitMap(NumPhysPages);
-
-    numPages = divRoundUp(size, PageSize);
-    size = numPages * PageSize;
-
-	printf("bitmap BEFORE allocation\n");
-	memoryBitMap->Print();
-    if (numPages > NumPhysPages) {
-		printf("\nThis program is too large to run until we have virtual memory.\n");
-		printf("\nExiting ----------------->\n");
-		currentThread->Finish();
-	}		// check we're not trying
-					// to run anything too big --
-					// at least until we have
-					// virtual memory
-
-	if (numPages > memoryBitMap->NumClear()) {
-		printf("\nThere isn't enough room left in physical memory for this program.\n");
-		printf("\nExiting ----------------->\n");
-		currentThread->Finish();
+	executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
+	if ((noffH.noffMagic != NOFFMAGIC) && (WordToHost(noffH.noffMagic) == NOFFMAGIC))
+	{
+		SwapHeader(&noffH);
 	}
 
-    DEBUG('a', "Initializing address space, num pages %d, size %d\n",
-					numPages, size);
-// first, set up the translation
-    pageTable = new TranslationEntry[numPages];
-	int start_physicalPageIndex;
-    for (i = 0; i < numPages; i++) {
-		int freePhysicalPage = memoryBitMap->Find();
-		if(!i) start_physicalPageIndex=freePhysicalPage;
-		pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
-		pageTable[i].physicalPage = freePhysicalPage;
-		pageTable[i].valid = TRUE;
-		pageTable[i].use = FALSE;
-		pageTable[i].dirty = FALSE;
-		pageTable[i].readOnly = FALSE;  // if the code segment was entirely on
-						// a separate page, we could set its
-						// pages to be read-only
+	// *IMPORTANT* You need to replace asserts with error handling code. 
+	// ASSERT(noffH.noffMagic == NOFFMAGIC); 
+	if (noffH.noffMagic == NOFFMAGIC)
+	{
 
-		DEBUG('a', "Initializing page, at 0x%x, size %d\n",
-			i*PageSize, PageSize);
+	// how big is address space?
+		size = noffH.code.size + noffH.initData.size + noffH.uninitData.size
+				+ UserStackSize;	// we need to increase the size
+							// to leave room for the stack
+
+	// code changes by Samantha Castille
+		// BitMap *memoryBitMap = new BitMap(NumPhysPages);
+		// This should not be here, it should be a global
+
+		numPages = divRoundUp(size, PageSize);
+		size = numPages * PageSize;
+
+		printf("bitmap BEFORE allocation\n");
+		memoryBitMap->Print();
+		if (numPages > NumPhysPages) {
+			printf("\nThis program is too large to run until we have virtual memory.\n");
+			printf("\nExiting ----------------->\n");
+			currentThread->killNewChild = true;
+			
+			// currentThread->Finish();
+			// Calling finish will kill the parent thread
+			return;
+		}		// check we're not trying
+						// to run anything too big --
+						// at least until we have
+						// virtual memory
+		if (numPages > memoryBitMap->NumClear()) {
+			printf("\nThere isn't enough room left in physical memory for this program.\n");
+			printf("\nExiting ----------------->\n");
+			currentThread->killNewChild = true;
+
+			// currentThread->Finish();
+			// Calling finish will kill the parent thread
+			return;
+		}
+
+		DEBUG('a', "Initializing address space, num pages %d, size %d\n",
+						numPages, size);
+	// first, set up the translation
+		pageTable = new TranslationEntry[numPages];
+		int start_physicalPageIndex;
+		for (i = 0; i < numPages; i++) {
+			int freePhysicalPage = memoryBitMap->Find();
+			if(!i) start_physicalPageIndex=freePhysicalPage;
+			pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
+			pageTable[i].physicalPage = freePhysicalPage;
+			pageTable[i].valid = TRUE;
+			pageTable[i].use = FALSE;
+			pageTable[i].dirty = FALSE;
+			pageTable[i].readOnly = FALSE;  // if the code segment was entirely on
+							// a separate page, we could set its
+							// pages to be read-only
+
+			DEBUG('a', "Initializing page, at 0x%x, size %d\n",
+				i*PageSize, PageSize);
+		}
+		printf("bitmap AFTER allocation\n");
+		memoryBitMap->Print();
+		// end code by Samantha Castille
+
+		// help from David Cain
+		// Zero ONLY the memory allocated for prog from bitmap
+		bzero(machine->mainMemory + start_physicalPageIndex * PageSize, numPages*PageSize);
+
+		// then, copy in the code and data segments into memory
+		if (noffH.code.size){
+			executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr + start_physicalPageIndex * PageSize]),
+								noffH.code.size, noffH.code.inFileAddr);
+		}
+		if (noffH.initData.size > 0){
+			executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr + start_physicalPageIndex * PageSize]),
+								noffH.initData.size, noffH.initData.inFileAddr);
+		}
 	}
-	printf("bitmap AFTER allocation\n");
-	memoryBitMap->Print();
-	// end code by Samantha Castille
-
-	// help from David Cain
-	// Zero ONLY the memory allocated for prog from bitmap
-	bzero(&(machine->mainMemory[start_physicalPageIndex]), numPages*PageSize);
-
-	// then, copy in the code and data segments into memory
-	if (noffH.code.size)
-		executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr + start_physicalPageIndex * PageSize]),
-							noffH.code.size, noffH.code.inFileAddr);
-	if (noffH.initData.size > 0)
-		executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr + start_physicalPageIndex * PageSize]),
-							noffH.initData.size, noffH.initData.inFileAddr);
+	else
+	{
+		printf("Error: Not a valid application\n");
+	}
 }
 
 //----------------------------------------------------------------------
