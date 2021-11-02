@@ -27,6 +27,7 @@ FileSystem  *fileSystem;
 Machine *machine;	// user program memory and registers
 List* activeThreads;
 int threadID;
+BitMap *memoryBitMap = new BitMap(NumPhysPages);
 #endif
 
 #ifdef FILESYS

@@ -17,6 +17,7 @@ main()
 	Write(prompt, 2, output);
 
 	Read(&buffer, 60, input); 
+    if(buffer[0]=='q') break;
 
 	newProc = Exec(buffer);
 	Join(newProc);

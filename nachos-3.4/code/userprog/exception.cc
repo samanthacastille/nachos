@@ -255,23 +255,23 @@ ExceptionHandler(ExceptionType which)
 
 				break;
 			}
-           case SC_Yield :	// Yield to a new process.
-		   {
-			   printf("SYSTEM CALL: Yield, called by thread %i.\n",currentThread->getID());
+			case SC_Yield :	// Yield to a new process.
+			{
+				printf("SYSTEM CALL: Yield, called by thread %i.\n",currentThread->getID());
 
-			   //Save the registers and yield CPU control.
-			   currentThread->space->SaveState();
-			   currentThread->Yield();
-			   //When the thread comes back, restore its registers.
-			   currentThread->space->RestoreState();
+				//Save the registers and yield CPU control.
+				currentThread->space->SaveState();
+				currentThread->Yield();
+				//When the thread comes back, restore its registers.
+				currentThread->space->RestoreState();
 
-               break;
-			}
-           default :
-	       //Unprogrammed system calls end up here
-			   printf("SYSTEM CALL: Unknown, called by thread %i.\n",currentThread->getID());
-               break;
-           }         // Advance program counters, ends syscall switch
+				break;
+				}
+			default :
+			//Unprogrammed system calls end up here
+				printf("SYSTEM CALL: Unknown, called by thread %i.\n",currentThread->getID());
+				break;
+			}         // Advance program counters, ends syscall switch
            break;
 
 	case ReadOnlyException :

@@ -37,6 +37,7 @@ extern int threadChoice;
 extern Machine* machine;	// user program memory and registers
 extern List* activeThreads;	// active thread list for process management
 extern int threadID;	// unique process id
+extern BitMap *memoryBitMap;
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB 
