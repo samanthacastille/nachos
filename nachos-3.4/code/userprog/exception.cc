@@ -290,14 +290,32 @@ ExceptionHandler(ExceptionType which)
 	case PageFaultException :
 		printf("Page Fault Here \n");
 		stats->numPageFaults++;
-		long badVAddr;
-		long badVPage;
+		int badVAddr;
+		int badVPage;
 		badVAddr = machine->ReadRegister(BadVAddrReg);
 		badVPage = badVAddr/PageSize;
 		printf("%d \n", stats->numPageFaults);
 		printf("%d \n", badVAddr);
 		printf("%d \n", badVPage);
-	//	currentThread->Finish();
+		currentThread->Finish();
+
+		AddrSpace pageTable = new TranslationEntry[badVPage];
+		int start_physicalPageIndex;
+
+		for (int j = 0; j < badVPage; j++)
+		{
+			int freePhysicalPage = memoryBitMap->Find();
+			if(!j) start_physicalPageIndex=freePhysicalPage;
+			pageTable[j].virtualPage = badVPage;
+			pageTable[j].physicalPage = freePhysicalPage;
+			pageTable[j].valid = TRUE;
+			pageTable[j].use = FALSE;
+			pageTable[j].dirty = FALSE;
+			pageTable[j].readOnly = FALSE;
+		}
+
+
+
 
 	// copy the memory allocation code from addrspace and change to storing one page instead of whole program
 		break;
