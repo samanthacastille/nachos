@@ -27,6 +27,7 @@ FileSystem  *fileSystem;
 Machine *machine;	// user program memory and registers
 List* activeThreads;
 int threadID;
+int memoryManagementType;
 #endif
 
 #ifdef FILESYS
@@ -118,6 +119,7 @@ Initialize(int argc, char **argv)
 	}
 
 
+
 // Command line code for task 5
 // by Samantha Castille
 #ifdef USER_PROGRAM
@@ -129,28 +131,33 @@ Initialize(int argc, char **argv)
       if ((*(*(argv+1)+1))=='\0') {
         memoryManagementType = atoi(*(argv+1));
         if ((memoryManagementType==0) || (memoryManagementType==1) || (memoryManagementType==2)) {
-          continue;
+          printf("Memory management type chosen : %d\n", memoryManagementType);
+          break;
         } else {
           printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
-          printf("Defaulted to option [0] - demand paging.\n");
+          printf("Defaulted to option [0] - demand paging.\nheloooooo\n\n");
           memoryManagementType = 0;
+          break;
         }
       } else {
         printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
-        printf("Defaulted to option [0] - demand paging.\n");
+        printf("Defaulted to option [0] - demand paging.\nwhy am i here \n\n");
         memoryManagementType = 0;
+        break;
       }
     argCount = 2;
     } else {
       printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
-      printf("Defaulted to option [0] - demand paging.\n");
+      printf("Defaulted to option [0] - demand paging.\nhit this for some reason\n\n");
       memoryManagementType = 0;
       argCount = 1;
+      break;
     }
   } else {
     printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
-    printf("Defaulted to option [0] - demand paging.\n");
+    printf("Defaulted to option [0] - demand paging.\nanother mystery\n\n");
     memoryManagementType = 0;
+    break;
   }
 #endif
 // end code for task 5
