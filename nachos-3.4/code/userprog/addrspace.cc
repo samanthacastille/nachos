@@ -107,10 +107,10 @@ AddrSpace::AddrSpace(OpenFile *executable)
 		pageTable = new TranslationEntry[numPages];
 		int start_physicalPageIndex;
 		for (i = 0; i < numPages; i++) {
-			int freePhysicalPage = memoryBitMap->Find();
-			if(!i) start_physicalPageIndex=freePhysicalPage;
-			pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
-			pageTable[i].physicalPage = freePhysicalPage;
+			//int freePhysicalPage = memoryBitMap->Find();
+			//if(!i) start_physicalPageIndex=freePhysicalPage;
+		  pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
+		//	pageTable[i].physicalPage = freePhysicalPage;
 			pageTable[i].valid = FALSE;
 			pageTable[i].use = FALSE;
 			pageTable[i].dirty = FALSE;
@@ -124,28 +124,18 @@ AddrSpace::AddrSpace(OpenFile *executable)
 		printf("bitmap AFTER allocation\n");
 		memoryBitMap->Print();
 		// end code by Samantha Castille
-
-		// help from David Cain
-		// Zero ONLY the memory allocated for prog from bitmap
-		bzero(machine->mainMemory + start_physicalPageIndex * PageSize, numPages*PageSize);
-
-		// then, copy in the code and data segments into memory
-	// 	/*if (noffH.code.size){
-	// 		executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr + start_physicalPageIndex * PageSize]),
-	// 							noffH.code.size, noffH.code.inFileAddr);
-	// 	}
-	// 	if (noffH.initData.size > 0){
-	// 		executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr + start_physicalPageIndex * PageSize]),
-	// 							noffH.initData.size, noffH.initData.inFileAddr);
-	// 	}
-	// }
-	// else
-	// {
-	// 	printf("Error: Not a valid application\n");
-	// }*/
-
+	}
 }
+
+
+void AddrSpace::copyIntoMemory(int badVPage, int freePhysicalPage) {
+	printf("Bad virtual page: %d\nFree physical page: %d", badVPage, freePhysicalPage);
+	executable->ReadAt(&(machine->mainMemory[freePhysicalPage*PageSize]), PageSize,
+		badVPage*PageSize);
+	pageTable[badVPage].valid = TRUE;
+	pageTable[badVPage].physicalPage = freePhysicalPage;
 }
+
 
 //----------------------------------------------------------------------
 // AddrSpace::~AddrSpace

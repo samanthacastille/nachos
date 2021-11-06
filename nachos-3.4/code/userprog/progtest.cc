@@ -34,6 +34,9 @@ StartProcess(char *filename)
     }
 // end code by Samantha Castille
 
+    printf("Number of physical pages: %d\n", NumPhysPages);
+    printf("Size of each page: %d\n", PageSize);
+    
     space = new AddrSpace(executable);
     currentThread->space = space;
     DEBUG('a', "Finished initializing AddressSpace\n");

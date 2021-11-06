@@ -277,7 +277,7 @@ ExceptionHandler(ExceptionType which)
 			}         // Advance program counters, ends syscall switch
            break;
 
-	case ReadOnlyException :
+	case ReadOnlyException : {
 		printf("ERROR: ReadOnlyException, called by thread %i.\n",currentThread->getID());
 		if (currentThread->getName() == "main")
 			ASSERT(FALSE);  //Not the way of handling an exception.
@@ -285,42 +285,31 @@ ExceptionHandler(ExceptionType which)
 			delete currentThread->space;
 		currentThread->Finish();	// Delete the thread.
 		break;
-
+	}
 	// code changes by James Thierry
-	case PageFaultException :
+	case PageFaultException : {
 		printf("Page Fault Here \n");
 		stats->numPageFaults++;
 		int badVAddr;
 		int badVPage;
 		badVAddr = machine->ReadRegister(BadVAddrReg);
 		badVPage = badVAddr/PageSize;
-		printf("%d \n", stats->numPageFaults);
-		printf("%d \n", badVAddr);
-		printf("%d \n", badVPage);
-		currentThread->Finish();
-
-		AddrSpace pageTable = new TranslationEntry[badVPage];
-		int start_physicalPageIndex;
-
-		for (int j = 0; j < badVPage; j++)
-		{
-			int freePhysicalPage = memoryBitMap->Find();
-			if(!j) start_physicalPageIndex=freePhysicalPage;
-			pageTable[j].virtualPage = badVPage;
-			pageTable[j].physicalPage = freePhysicalPage;
-			pageTable[j].valid = TRUE;
-			pageTable[j].use = FALSE;
-			pageTable[j].dirty = FALSE;
-			pageTable[j].readOnly = FALSE;
+		printf("Number of page faults: %d \n", stats->numPageFaults);
+		printf("Bad virtual address: %d \n", badVAddr);
+		printf("Bad virtual page: %d \n", badVPage);
+		int freePhysicalPage = memoryBitMap->Find();
+		if (freePhysicalPage==-1) {
+			printf("No free physical pages exist, we haven't done virtual memory yet.\n");
+			printf("Exiting-------------------------->\n");
+			currentThread->Finish();
 		}
-
-
-
-
-	// copy the memory allocation code from addrspace and change to storing one page instead of whole program
+		printf("Free physical page:%d\n", freePhysicalPage);
+		currentThread->space->copyIntoMemory(badVPage, freePhysicalPage);
 		break;
 // end code changes by James Thierry
 
+
+	}
 	case BusErrorException :
 		printf("ERROR: BusErrorException, called by thread %i.\n",currentThread->getID());
 		if (currentThread->getName() == "main")
