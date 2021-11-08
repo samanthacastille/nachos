@@ -60,11 +60,15 @@ SwapHeader (NoffHeader *noffH)
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-AddrSpace::AddrSpace(OpenFile *executable)
+AddrSpace::AddrSpace(OpenFile *executable, char *filename, int thread_id)
 {
     NoffHeader noffH;
     unsigned int i, size;
-		executableFile = executable;
+	// Code additions by Ethan Bruce
+	// Copy the executable file we passed into parameter executable into the executableFile field
+	// We use this parameter instead of argv + 1 because we don't know whether 
+	// this addrspace is being created for the initial program or because of a program's exec call.
+	executableFile* = fileSystem->Open(filename);
 
 	executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
 	if ((noffH.noffMagic != NOFFMAGIC) && (WordToHost(noffH.noffMagic) == NOFFMAGIC))
@@ -112,7 +116,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 			//if(!i) start_physicalPageIndex=freePhysicalPage;
 		  pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
 		//	pageTable[i].physicalPage = freePhysicalPage;
-			pageTable[i].valid = FALSE;
+			pageTable[i].valid = FALSE;	// Set valid bit to false because we are not loading any content into memory
 			pageTable[i].use = FALSE;
 			pageTable[i].dirty = FALSE;
 			pageTable[i].readOnly = FALSE;  // if the code segment was entirely on

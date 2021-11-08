@@ -20,10 +20,11 @@
 
 class AddrSpace {
   public:
-
-    AddrSpace(OpenFile *executable);	// Create an address space,
+    //Begin code changes by Ethan Bruce
+    AddrSpace(OpenFile *executable, char *filename, int thread_id);	// Create an address space,
 					// initializing it with the program
 					// stored in the file "executable"
+    //End code changes by Ethan Bruce
     ~AddrSpace();			// De-allocate an address space
 
     void InitRegisters();		// Initialize user-level CPU registers,
