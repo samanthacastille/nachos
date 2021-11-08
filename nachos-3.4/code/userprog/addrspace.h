@@ -31,7 +31,7 @@ class AddrSpace {
 
     void SaveState();			// Save/restore address space-specific
     void RestoreState();		// info on a context switch
-    void copyIntoMemory(int, int);
+    void copyIntoMemory(long, int);
 
 
   private:
@@ -40,7 +40,7 @@ class AddrSpace {
     unsigned int numPages;		// Number of pages in the virtual
 					// address space
 
-    OpenFile* executable;
+    OpenFile* executableFile;
 };
 
 #endif // ADDRSPACE_H

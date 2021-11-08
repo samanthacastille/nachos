@@ -27,16 +27,16 @@ StartProcess(char *filename)
 
     AddrSpace *space;
 
-// code by Samantha Castille
+// code by Narathip Pimpa
     if (executable == NULL) {
 	printf("Unable to open file %s\n", filename);
   printf("\nExiting ----------------->\n");
     }
-// end code by Samantha Castille
 
     printf("\nNumber of physical pages: %d\n", NumPhysPages);
     printf("Size of each page: %d\n", PageSize);
     printf("Memory management type chosen: %d\n\n", memoryManagementType);
+// end code by Narathip Pimpa
 
     space = new AddrSpace(executable);
     currentThread->space = space;

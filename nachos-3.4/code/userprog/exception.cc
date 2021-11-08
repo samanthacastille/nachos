@@ -290,8 +290,8 @@ ExceptionHandler(ExceptionType which)
 	case PageFaultException : {
 		printf("Page Fault Here \n");
 		stats->numPageFaults++;
-		int badVAddr;
-		int badVPage;
+		long badVAddr;
+		long badVPage;
 		badVAddr = machine->ReadRegister(BadVAddrReg);
 		badVPage = badVAddr/PageSize;
 		printf("Number of page faults: %d \n", stats->numPageFaults);
@@ -303,7 +303,7 @@ ExceptionHandler(ExceptionType which)
 			printf("Exiting-------------------------->\n");
 			currentThread->Finish();
 		}
-		printf("Free physical page:%d\n", freePhysicalPage);
+		printf("Free physical page: %d\n", freePhysicalPage);
 		currentThread->space->copyIntoMemory(badVPage, freePhysicalPage);
 		break;
 // end code changes by James Thierry

@@ -64,6 +64,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 {
     NoffHeader noffH;
     unsigned int i, size;
+		executableFile = executable;
 
 	executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
 	if ((noffH.noffMagic != NOFFMAGIC) && (WordToHost(noffH.noffMagic) == NOFFMAGIC))
@@ -128,13 +129,15 @@ AddrSpace::AddrSpace(OpenFile *executable)
 }
 
 
-void AddrSpace::copyIntoMemory(int badVPage, int freePhysicalPage) {
-	printf("Bad virtual page: %d\nFree physical page: %d", badVPage, freePhysicalPage);
-	executable->ReadAt(&(machine->mainMemory[freePhysicalPage*PageSize]), PageSize,
+// code by Samantha Castille
+void AddrSpace::copyIntoMemory(long badVPage, int freePhysicalPage) {
+	printf("Bad virtual page: %ld\nFree physical page: %d", badVPage, freePhysicalPage);
+	executableFile->ReadAt(&(machine->mainMemory[freePhysicalPage*PageSize]), PageSize,
 		badVPage*PageSize);
 	pageTable[badVPage].valid = TRUE;
 	pageTable[badVPage].physicalPage = freePhysicalPage;
 }
+// end code by Samantha Castille
 
 
 //----------------------------------------------------------------------
