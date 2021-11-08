@@ -1,4 +1,4 @@
-// exception.cc 
+// exception.cc
 //	Entry point into the Nachos kernel from user programs.
 //	There are two kinds of things that can cause control to
 //	transfer back to here from user code:
@@ -9,7 +9,7 @@
 //
 //	exceptions -- The user code does something that the CPU can't handle.
 //	For instance, accessing memory that doesn't exist, arithmetic errors,
-//	etc.  
+//	etc.
 //
 //	Interrupts (which can also cause control to transfer from user
 //	code into the Nachos kernel) are handled elsewhere.
@@ -18,7 +18,7 @@
 // Everything else core dumps.
 //
 // Copyright (c) 1992-1993 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation 
+// All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
 #include <stdio.h>        // FA98
@@ -51,12 +51,12 @@ Thread * getID(int toGet);
 //		arg3 -- r6
 //		arg4 -- r7
 //
-//	The result of the system call, if any, must be put back into r2. 
+//	The result of the system call, if any, must be put back into r2.
 //
 // And don't forget to increment the pc before returning. (Or else you'll
 // loop making the same system call forever!
 //
-//	"which" is the kind of exception.  The list of possible exceptions 
+//	"which" is the kind of exception.  The list of possible exceptions
 //	are in machine.h.
 //----------------------------------------------------------------------
 
@@ -80,12 +80,12 @@ Thread* getID(int toGet)	// Goes through the list of active threads and returns 
 		return NULL;
 	else return toReturn;
 }
-	
+
 void processCreator(int arg)	// Used when a process first actually runs, not when it is created.
  {
 	currentThread->space->InitRegisters();		// set the initial register values
     currentThread->space->RestoreState();		// load page table register
-	
+
 	if (threadToBeDestroyed != NULL){
 		delete threadToBeDestroyed;
 		threadToBeDestroyed = NULL;
@@ -128,7 +128,7 @@ ExceptionHandler(ExceptionType which)
 			interrupt->Halt();
 			break;
 
-			
+
 		case SC_Read :
 			if (arg2 <= 0 || arg3 < 0){
 				printf("\nRead 0 byte.\n");
@@ -145,7 +145,7 @@ ExceptionHandler(ExceptionType which)
 					j=j-1;
 				else{
 					ch[j] = (char) i;
-					if (ch[j] == '\0') 
+					if (ch[j] == '\0')
 						break;
 				}
 			}
@@ -166,7 +166,7 @@ ExceptionHandler(ExceptionType which)
 
 				// Read file name into the kernel space
 				char *filename = new char[100];
-				
+
 				for(int m = 0; m < 100; m++)
 					filename[m] = NULL;
 
@@ -182,8 +182,8 @@ ExceptionHandler(ExceptionType which)
 				}
 				// Open File
 				OpenFile *executable = fileSystem->Open(filename);
-				
-				if (executable == NULL) 
+
+				if (executable == NULL)
 				{
 					printf("Unable to open file %s\n", filename);
 					delete filename;
@@ -221,7 +221,7 @@ ExceptionHandler(ExceptionType which)
 					printf("ERROR: Trying to join process %i to process %i, which was not created successfully! Process %i continuing normally.\n", currentThread->getID(), -arg1, currentThread->getID());	// Return an error message, continue as normal.
 					break;
 				}
-				
+
 				if(getID(arg1) != NULL)	// If the thread exists...
 				{
 					if(!currentThread->isJoined)	// And it's not already joined...
@@ -243,38 +243,41 @@ ExceptionHandler(ExceptionType which)
 			}
 			case SC_Exit :	// Exit a process.
 			{
+				// we need to clear the bitmap and then delete the address spaces
+
+
 				printf("SYSTEM CALL: Exit, called by thread %i.\n",currentThread->getID());
 				if(arg1 == 0)	// Did we exit properly?  If not, show an error message.
 					printf("Process %i exited normally!\n", currentThread->getID());
 				else
 					printf("ERROR: Process %i exited abnormally!\n", currentThread->getID());
-				
+
 				if(currentThread->space)	// Delete the used memory from the process.
 					delete currentThread->space;
 				currentThread->Finish();	// Delete the thread.
 
 				break;
 			}
-           case SC_Yield :	// Yield to a new process.
-		   {
-			   printf("SYSTEM CALL: Yield, called by thread %i.\n",currentThread->getID());
+			case SC_Yield :	// Yield to a new process.
+			{
+				printf("SYSTEM CALL: Yield, called by thread %i.\n",currentThread->getID());
 
-			   //Save the registers and yield CPU control.
-			   currentThread->space->SaveState();
-			   currentThread->Yield();
-			   //When the thread comes back, restore its registers.
-			   currentThread->space->RestoreState();
+				//Save the registers and yield CPU control.
+				currentThread->space->SaveState();
+				currentThread->Yield();
+				//When the thread comes back, restore its registers.
+				currentThread->space->RestoreState();
 
-               break;
-			}
-           default :
-	       //Unprogrammed system calls end up here
-			   printf("SYSTEM CALL: Unknown, called by thread %i.\n",currentThread->getID());
-               break;
-           }         // Advance program counters, ends syscall switch
+				break;
+				}
+			default :
+			//Unprogrammed system calls end up here
+				printf("SYSTEM CALL: Unknown, called by thread %i.\n",currentThread->getID());
+				break;
+			}         // Advance program counters, ends syscall switch
            break;
 
-	case ReadOnlyException :
+	case ReadOnlyException : {
 		printf("ERROR: ReadOnlyException, called by thread %i.\n",currentThread->getID());
 		if (currentThread->getName() == "main")
 			ASSERT(FALSE);  //Not the way of handling an exception.
@@ -282,6 +285,31 @@ ExceptionHandler(ExceptionType which)
 			delete currentThread->space;
 		currentThread->Finish();	// Delete the thread.
 		break;
+	}
+	// code changes by James Thierry
+	case PageFaultException : {
+		printf("Page Fault Here \n");
+		stats->numPageFaults++;
+		long badVAddr;
+		long badVPage;
+		badVAddr = machine->ReadRegister(BadVAddrReg);
+		badVPage = badVAddr/PageSize;
+		printf("Number of page faults: %d \n", stats->numPageFaults);
+		printf("Bad virtual address: %d \n", badVAddr);
+		printf("Bad virtual page: %d \n", badVPage);
+		int freePhysicalPage = memoryBitMap->Find();
+		if (freePhysicalPage==-1) {
+			printf("No free physical pages exist, we haven't done virtual memory yet.\n");
+			printf("Exiting-------------------------->\n");
+			currentThread->Finish();
+		}
+		printf("Free physical page: %d\n", freePhysicalPage);
+		currentThread->space->copyIntoMemory(badVPage, freePhysicalPage);
+		break;
+// end code changes by James Thierry
+
+
+	}
 	case BusErrorException :
 		printf("ERROR: BusErrorException, called by thread %i.\n",currentThread->getID());
 		if (currentThread->getName() == "main")
@@ -386,4 +414,3 @@ static void SWrite(char *buffer, int size, int id)
 	WriteFile(id,buffer,size);
 }
 // end FA98
-

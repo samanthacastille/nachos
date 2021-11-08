@@ -1,4 +1,4 @@
-// progtest.cc 
+// progtest.cc
 //	Test routines for demonstrating that Nachos can load
 //	a user program and execute it.
 //
@@ -27,15 +27,22 @@ StartProcess(char *filename)
 
     AddrSpace *space;
 
+// code by Narathip Pimpa
     if (executable == NULL) {
 	printf("Unable to open file %s\n", filename);
-	return;
+  printf("\nExiting ----------------->\n");
     }
+
+    printf("\nNumber of physical pages: %d\n", NumPhysPages);
+    printf("Size of each page: %d\n", PageSize);
+    printf("Memory management type chosen: %d\n\n", memoryManagementType);
+// end code by Narathip Pimpa
 
     space = new AddrSpace(executable);
     currentThread->space = space;
-
+    DEBUG('a', "Finished initializing AddressSpace\n");
     delete executable;			// close file
+
 
     space->InitRegisters();		// set the initial register values
     space->RestoreState();		// load page table register
