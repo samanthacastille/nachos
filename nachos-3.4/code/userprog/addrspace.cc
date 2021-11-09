@@ -68,7 +68,7 @@ AddrSpace::AddrSpace(OpenFile *executable, char *filename, int thread_id)
 	// Copy the executable file we passed into parameter executable into the executableFile field
 	// We use this parameter instead of argv + 1 because we don't know whether
 	// this addrspace is being created for the initial program or because of a program's exec call.
-	executableFile * = fileSystem->Open(filename);
+	executableFile = fileSystem->Open(filename);
 
 	executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
 	if ((noffH.noffMagic != NOFFMAGIC) && (WordToHost(noffH.noffMagic) == NOFFMAGIC))
@@ -145,8 +145,8 @@ AddrSpace::AddrSpace(OpenFile *executable, char *filename, int thread_id)
 			pageTable[i].use = FALSE;
 			pageTable[i].dirty = FALSE;
 			pageTable[i].readOnly = FALSE; // if the code segment was entirely on
-				// a separate page, we could set its
-				// pages to be read-only
+										   // a separate page, we could set its
+										   // pages to be read-only
 
 			DEBUG('a', "Initializing page, at 0x%x, size %d\n",
 				  i * PageSize, PageSize);
@@ -161,7 +161,7 @@ AddrSpace::AddrSpace(OpenFile *executable, char *filename, int thread_id)
 void AddrSpace::copyIntoMemory(int badVPage, int freePhysicalPage)
 {
 	printf("Bad virtual page: %d\nFree physical page: %d", badVPage, freePhysicalPage);
-	executable->ReadAt(&(machine->mainMemory[freePhysicalPage * PageSize]), PageSize,
+	executableFile->ReadAt(&(machine->mainMemory[freePhysicalPage * PageSize]), PageSize,
 					   badVPage * PageSize);
 	pageTable[badVPage].valid = TRUE;
 	pageTable[badVPage].physicalPage = freePhysicalPage;
