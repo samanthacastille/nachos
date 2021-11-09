@@ -31,7 +31,7 @@
 //----------------------------------------------------------------------
 // taslk
 static void
-SwapHeader (NoffHeader *noffH)
+SwapHeader(NoffHeader *noffH)
 {
 	noffH->noffMagic = WordToHost(noffH->noffMagic);
 	noffH->code.size = WordToHost(noffH->code.size);
@@ -60,10 +60,15 @@ SwapHeader (NoffHeader *noffH)
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-AddrSpace::AddrSpace(OpenFile *executable)
+AddrSpace::AddrSpace(OpenFile *executable, char *filename, int thread_id)
 {
-    NoffHeader noffH;
-    unsigned int i, size;
+	NoffHeader noffH;
+	unsigned int i, size;
+	// Code additions by Ethan Bruce
+	// Copy the executable file we passed into parameter executable into the executableFile field
+	// We use this parameter instead of argv + 1 because we don't know whether
+	// this addrspace is being created for the initial program or because of a program's exec call.
+	executableFile = fileSystem->Open(filename);
 
 	executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
 	if ((noffH.noffMagic != NOFFMAGIC) && (WordToHost(noffH.noffMagic) == NOFFMAGIC))
@@ -74,27 +79,51 @@ AddrSpace::AddrSpace(OpenFile *executable)
 	if (noffH.noffMagic == NOFFMAGIC)
 	{
 
-	// how big is address space?
-		size = noffH.code.size + noffH.initData.size + noffH.uninitData.size
-				+ UserStackSize;	// we need to increase the size
-							// to leave room for the stack
+		// how big is address space?
+		size = noffH.code.size + noffH.initData.size + noffH.uninitData.size + UserStackSize; // we need to increase the size
+																							  // to leave room for the stack
 
 		numPages = divRoundUp(size, PageSize);
 		size = numPages * PageSize;
 
-// code changes by Samantha Castille
+		// Code changes by Ethan Bruce
+		swapFileName = new char[100];
+		sprintf(swapFileName, "%d.swap", threadID);
+		bool success = fileSystem->Create(swapFileName, size); // create thread swapfile
+		if (!success)
+		{
+			// handle error with swapfile creation
+		}
+
+		OpenFile *swapFile = fileSystem->Open(swapFileName); // open swapfile to use.
+
+		if (swapFile == NULL)
+		{
+			// handle error withg swapfile opening
+		}
+
+		// Copy contents of executable into swapfile.
+		char *buffer = new char[size];
+		executable->ReadAt(buffer, size, sizeof(noffH));
+		swapFile->WriteAt(buffer, size, 0);
+		delete[] buffer;
+		delete swapFile;
+
+		// code changes by Samantha Castille
 		printf("bitmap BEFORE allocation\n");
 		memoryBitMap->Print();
-		if (numPages > NumPhysPages) {
+		if (numPages > NumPhysPages)
+		{
 			printf("\nThis program is too large to run until we have virtual memory.\n");
 			printf("\nExiting ----------------->\n");
 			currentThread->killNewChild = true;
 			return;
-		}		// check we're not trying
-						// to run anything too big --
-						// at least until we have
-						// virtual memory
-		if (numPages > memoryBitMap->NumClear()) {
+		} // check we're not trying
+		// to run anything too big --
+		// at least until we have
+		// virtual memory
+		if (numPages > memoryBitMap->NumClear())
+		{
 			printf("\nThere isn't enough room left in physical memory for this program.\n");
 			printf("\nExiting ----------------->\n");
 			currentThread->killNewChild = true;
@@ -102,48 +131,36 @@ AddrSpace::AddrSpace(OpenFile *executable)
 		}
 
 		DEBUG('a', "Initializing address space, num pages %d, size %d\n",
-						numPages, size);
-	// first, set up the translation
+			  numPages, size);
+		// first, set up the translation
 		pageTable = new TranslationEntry[numPages];
 		int start_physicalPageIndex;
-		for (i = 0; i < numPages; i++) {
-			int freePhysicalPage = memoryBitMap->Find();
-			if(!i) start_physicalPageIndex=freePhysicalPage;
-			pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
-			pageTable[i].physicalPage = freePhysicalPage;
-			pageTable[i].valid = TRUE;
+		for (i = 0; i < numPages; i++)
+		{
+			//int freePhysicalPage = memoryBitMap->Find();
+			//if(!i) start_physicalPageIndex=freePhysicalPage;
+			pageTable[i].virtualPage = i; // for now, virtual page # = phys page #
+										  //	pageTable[i].physicalPage = freePhysicalPage;
+			pageTable[i].valid = FALSE;	  // Set valid bit to false because we are not loading any content into memory
 			pageTable[i].use = FALSE;
 			pageTable[i].dirty = FALSE;
-			pageTable[i].readOnly = FALSE;  // if the code segment was entirely on
-							// a separate page, we could set its
-							// pages to be read-only
-
-			DEBUG('a', "Initializing page, at 0x%x, size %d\n",
-				i*PageSize, PageSize);
-		}
-		printf("bitmap AFTER allocation\n");
-		memoryBitMap->Print();
+			pageTable[i].readOnly = FALSE; // if the code segment was entirely on
+										   // a separate page, we could set its
+										   // pages to be read-only
 		// end code by Samantha Castille
-
-		// help from David Cain
-		// Zero ONLY the memory allocated for prog from bitmap
-		bzero(machine->mainMemory + start_physicalPageIndex * PageSize, numPages*PageSize);
-
-		// then, copy in the code and data segments into memory
-		if (noffH.code.size){
-			executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr + start_physicalPageIndex * PageSize]),
-								noffH.code.size, noffH.code.inFileAddr);
-		}
-		if (noffH.initData.size > 0){
-			executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr + start_physicalPageIndex * PageSize]),
-								noffH.initData.size, noffH.initData.inFileAddr);
-		}
 	}
-	else
-	{
-		printf("Error: Not a valid application\n");
 	}
 }
+
+// code by Samantha Castille
+void AddrSpace::copyIntoMemory(int badVPage, int freePhysicalPage)
+{
+	executableFile->ReadAt(&(machine->mainMemory[freePhysicalPage * PageSize]), PageSize,
+					   badVPage * PageSize);
+	pageTable[badVPage].valid = TRUE;
+	pageTable[badVPage].physicalPage = freePhysicalPage;
+}
+// end code by Samantha Castille
 
 //----------------------------------------------------------------------
 // AddrSpace::~AddrSpace
@@ -152,7 +169,11 @@ AddrSpace::AddrSpace(OpenFile *executable)
 
 AddrSpace::~AddrSpace()
 {
-   delete pageTable;
+	delete pageTable;
+	// Code changes by Ethan Bruce
+
+	// Delete the swapfile.
+	fileSystem->Remove(swapFileName);
 }
 
 //----------------------------------------------------------------------
@@ -165,26 +186,25 @@ AddrSpace::~AddrSpace()
 //	when this thread is context switched out.
 //----------------------------------------------------------------------
 
-void
-AddrSpace::InitRegisters()
+void AddrSpace::InitRegisters()
 {
-    int i;
+	int i;
 
-    for (i = 0; i < NumTotalRegs; i++)
-	machine->WriteRegister(i, 0);
+	for (i = 0; i < NumTotalRegs; i++)
+		machine->WriteRegister(i, 0);
 
-    // Initial program counter -- must be location of "Start"
-    machine->WriteRegister(PCReg, 0);
+	// Initial program counter -- must be location of "Start"
+	machine->WriteRegister(PCReg, 0);
 
-    // Need to also tell MIPS where next instruction is, because
-    // of branch delay possibility
-    machine->WriteRegister(NextPCReg, 4);
+	// Need to also tell MIPS where next instruction is, because
+	// of branch delay possibility
+	machine->WriteRegister(NextPCReg, 4);
 
-   // Set the stack register to the end of the address space, where we
-   // allocated the stack; but subtract off a bit, to make sure we don't
-   // accidentally reference off the end!
-    machine->WriteRegister(StackReg, numPages * PageSize - 16);
-    DEBUG('a', "Initializing stack register to %d\n", numPages * PageSize - 16);
+	// Set the stack register to the end of the address space, where we
+	// allocated the stack; but subtract off a bit, to make sure we don't
+	// accidentally reference off the end!
+	machine->WriteRegister(StackReg, numPages * PageSize - 16);
+	DEBUG('a', "Initializing stack register to %d\n", numPages * PageSize - 16);
 }
 
 //----------------------------------------------------------------------
@@ -196,7 +216,8 @@ AddrSpace::InitRegisters()
 //----------------------------------------------------------------------
 
 void AddrSpace::SaveState()
-{}
+{
+}
 
 //----------------------------------------------------------------------
 // AddrSpace::RestoreState
@@ -208,6 +229,6 @@ void AddrSpace::SaveState()
 
 void AddrSpace::RestoreState()
 {
-    machine->pageTable = pageTable;
-    machine->pageTableSize = numPages;
+	machine->pageTable = pageTable;
+	machine->pageTableSize = numPages;
 }
