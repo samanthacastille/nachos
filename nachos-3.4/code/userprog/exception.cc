@@ -322,7 +322,6 @@ void ExceptionHandler(ExceptionType which)
 
 		if (freePhysicalPage != -1)
 		{
-			printf("Free physical page:%d\n", freePhysicalPage);
 			// Open the swap file created in address space.
 			OpenFile *executable = fileSystem->Open(currentThread->space->swapFileName);
 			if (executable == NULL)

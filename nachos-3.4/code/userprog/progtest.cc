@@ -35,7 +35,13 @@ void StartProcess(char *filename)
 
     printf("\nNumber of physical pages: %d\n", NumPhysPages);
     printf("Size of each page: %d\n", PageSize);
-    printf("Memory management type chosen: %d\n\n", memoryManagementType);
+    if (memoryManagementType==0) {
+      printf("Memory management type chosen: Demand Paging\n\n");
+    } else if (memoryManagementType==1) {
+      printf("Memory management type chosen: FIFO\n\n");
+    } else if (memoryManagementType==2) {
+      printf("Memory management type chosen: Random\n\n");
+    }
     // end code by Narathip Pimpa
     // Begin code changes by Ethan Bruce
     space = new AddrSpace(executable, filename, 0); //create new AddrSpace

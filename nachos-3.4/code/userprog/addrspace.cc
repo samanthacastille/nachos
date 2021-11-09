@@ -147,20 +147,14 @@ AddrSpace::AddrSpace(OpenFile *executable, char *filename, int thread_id)
 			pageTable[i].readOnly = FALSE; // if the code segment was entirely on
 										   // a separate page, we could set its
 										   // pages to be read-only
-
-			DEBUG('a', "Initializing page, at 0x%x, size %d\n",
-				  i * PageSize, PageSize);
-		}
-		printf("bitmap AFTER allocation\n");
-		memoryBitMap->Print();
 		// end code by Samantha Castille
+	}
 	}
 }
 
 // code by Samantha Castille
 void AddrSpace::copyIntoMemory(int badVPage, int freePhysicalPage)
 {
-	printf("Bad virtual page: %d\nFree physical page: %d", badVPage, freePhysicalPage);
 	executableFile->ReadAt(&(machine->mainMemory[freePhysicalPage * PageSize]), PageSize,
 					   badVPage * PageSize);
 	pageTable[badVPage].valid = TRUE;
@@ -177,7 +171,7 @@ AddrSpace::~AddrSpace()
 {
 	delete pageTable;
 	// Code changes by Ethan Bruce
-	
+
 	// Delete the swapfile.
 	fileSystem->Remove(swapFileName);
 }

@@ -1,8 +1,8 @@
-// system.cc 
+// system.cc
 //	Nachos initialization and cleanup routines.
 //
 // Copyright (c) 1992-1993 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation 
+// All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
@@ -154,11 +154,6 @@ Initialize(int argc, char **argv)
       argCount = 1;
       break;
     }
-  } else {
-    printf("Next time, if you'd like to choose the type of memory management, use -V and a task number (0/1/2).\n");
-    printf("Defaulted to option [0] - demand paging.\nanother mystery\n\n");
-    memoryManagementType = 0;
-    break;
   }
 #endif
 // end code for task 5
@@ -252,4 +247,3 @@ Cleanup()
 
     Exit(0);
 }
-
