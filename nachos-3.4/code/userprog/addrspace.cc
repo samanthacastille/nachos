@@ -176,6 +176,10 @@ void AddrSpace::copyIntoMemory(int badVPage, int freePhysicalPage)
 AddrSpace::~AddrSpace()
 {
 	delete pageTable;
+	// Code changes by Ethan Bruce
+	
+	// Delete the swapfile.
+	fileSystem->Remove(swapFileName);
 }
 
 //----------------------------------------------------------------------

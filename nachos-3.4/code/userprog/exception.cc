@@ -304,8 +304,6 @@ void ExceptionHandler(ExceptionType which)
 		printf("Page Fault Here \n");
 		stats->numPageFaults++;
 		// Code changes by Ethan Bruce
-		/*long badVAddr;
-		long badVPage;*/
 		int badVAddr = machine->ReadRegister(BadVAddrReg);
 		int badVPage = badVAddr / PageSize;
 		printf("Number of page faults: %d \n", stats->numPageFaults);
@@ -318,7 +316,6 @@ void ExceptionHandler(ExceptionType which)
 			printf("Exiting-------------------------->\n");
 			currentThread->Finish();
 			// Implement page replacement here
-
 		}
 		printf("Free physical page: %d\n", freePhysicalPage);
 		currentThread->space->copyIntoMemory(badVPage, freePhysicalPage);
