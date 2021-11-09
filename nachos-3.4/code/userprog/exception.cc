@@ -303,10 +303,11 @@ void ExceptionHandler(ExceptionType which)
 	{
 		printf("Page Fault Here \n");
 		stats->numPageFaults++;
-		long badVAddr;
-		long badVPage;
-		badVAddr = machine->ReadRegister(BadVAddrReg);
-		badVPage = badVAddr / PageSize;
+		// Code changes by Ethan Bruce
+		/*long badVAddr;
+		long badVPage;*/
+		int badVAddr = machine->ReadRegister(BadVAddrReg);
+		int badVPage = badVAddr / PageSize;
 		printf("Number of page faults: %d \n", stats->numPageFaults);
 		printf("Bad virtual address: %d \n", badVAddr);
 		printf("Bad virtual page: %d \n", badVPage);
@@ -316,9 +317,30 @@ void ExceptionHandler(ExceptionType which)
 			printf("No free physical pages exist, we haven't done virtual memory yet.\n");
 			printf("Exiting-------------------------->\n");
 			currentThread->Finish();
+			// Implement page replacement here
+
 		}
 		printf("Free physical page: %d\n", freePhysicalPage);
 		currentThread->space->copyIntoMemory(badVPage, freePhysicalPage);
+
+		if (freePhysicalPage != -1)
+		{
+			printf("Free physical page:%d\n", freePhysicalPage);
+			// Open the swap file created in address space.
+			OpenFile *executable = fileSystem->Open(currentThread->space->swapFileName);
+			if (executable == NULL)
+			{
+				// do error handling
+			}
+
+			// Read content of the swapfile into main memory
+			executable->ReadAt(&(machine->mainMemory[freePhysicalPage * PageSize]), PageSize, badVPage * PageSize);
+			currentThread->space->pageTable[badVPage].physicalPage = freePhysicalPage;
+			currentThread->space->pageTable[badVPage].valid = TRUE;
+			delete executable;
+		}
+		printf("Bitmap AFTER allocation\n");
+		memoryBitMap->Print();
 		break;
 		// end code changes by James Thierry
 	}

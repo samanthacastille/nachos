@@ -37,8 +37,11 @@ void StartProcess(char *filename)
     printf("Size of each page: %d\n", PageSize);
     printf("Memory management type chosen: %d\n\n", memoryManagementType);
     // end code by Narathip Pimpa
+    // Begin code changes by Ethan Bruce
+    space = new AddrSpace(executable, filename, 0); //create new AddrSpace
+    //We pass the filename so that we can deep copy the executable into the AddrSpace object,
+    //and we pass the id of the main thread (which is 0) so we can set up swap files.
 
-    space = new AddrSpace(executable);
     currentThread->space = space;
     DEBUG('a', "Finished initializing AddressSpace\n");
     delete executable; // close file

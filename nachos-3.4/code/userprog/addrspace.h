@@ -32,7 +32,7 @@ class AddrSpace {
 
     void SaveState();			// Save/restore address space-specific
     void RestoreState();		// info on a context switch
-    void copyIntoMemory(long, int);
+    void copyIntoMemory(int, int);
 
 
   private:
