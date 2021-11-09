@@ -327,12 +327,15 @@ void ExceptionHandler(ExceptionType which)
 			OpenFile *executable = fileSystem->Open(currentThread->space->swapFileName);
 			if (executable == NULL)
 			{
-				// do error handling
+				if (currentThread->space) // Delete the used memory from the process.
+				delete currentThread->space;
+				currentThread->Finish(); // Delete the thread.
 			}
 
 			// Read content of the swapfile into main memory
 			executable->ReadAt(&(machine->mainMemory[freePhysicalPage * PageSize]), PageSize, badVPage * PageSize);
 			currentThread->space->pageTable[badVPage].physicalPage = freePhysicalPage;
+			currentThread->space->invertedPageTable[freePhysicalPage] = threadID;
 			currentThread->space->pageTable[badVPage].valid = TRUE;
 			delete executable;
 		}

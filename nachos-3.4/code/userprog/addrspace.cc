@@ -70,6 +70,9 @@ AddrSpace::AddrSpace(OpenFile *executable, char *filename, int thread_id)
 	// this addrspace is being created for the initial program or because of a program's exec call.
 	executableFile = fileSystem->Open(filename);
 
+	// Set up the IPT.
+	invertedPageTable = new int[NumPhysPages];
+
 	executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
 	if ((noffH.noffMagic != NOFFMAGIC) && (WordToHost(noffH.noffMagic) == NOFFMAGIC))
 	{
@@ -162,7 +165,7 @@ void AddrSpace::copyIntoMemory(int badVPage, int freePhysicalPage)
 {
 	printf("Bad virtual page: %d\nFree physical page: %d", badVPage, freePhysicalPage);
 	executableFile->ReadAt(&(machine->mainMemory[freePhysicalPage * PageSize]), PageSize,
-					   badVPage * PageSize);
+						   badVPage * PageSize);
 	pageTable[badVPage].valid = TRUE;
 	pageTable[badVPage].physicalPage = freePhysicalPage;
 }
@@ -177,9 +180,9 @@ AddrSpace::~AddrSpace()
 {
 	delete pageTable;
 	// Code changes by Ethan Bruce
-	
 	// Delete the swapfile.
 	fileSystem->Remove(swapFileName);
+	executableFile->~OpenFile();
 }
 
 //----------------------------------------------------------------------
